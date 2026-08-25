@@ -2,6 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
+      Full-range gate (1.5.0): package visibility for the paid unlock-key app.
+      Required on API 30+ or KeyCheck's getPackageInfo silently reports
+      not-found. Play flavor only; the F-Droid build never queries anything.
+    -->
+    <queries>
+        <package android:name="com.granularvolume.key" />
+    </queries>
+
+    <!--
       Play-flavor only. Declares the transparent host activity for the Google Play
       in-app review dialog. Merged into the "play" build's manifest; the F-Droid
       build never sees it, keeping that build free of any Play-review surface.

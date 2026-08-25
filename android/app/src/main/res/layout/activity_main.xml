@@ -202,6 +202,65 @@
         <!-- Consent gate (clickwrap). Sits ABOVE the permission CTA and gates it, so the
              user actively accepts before anything is granted. No new screen, by design.
              Hidden once the current Terms version has been accepted. -->
+        <!-- Grandfather tip-jar card (1.5.0): play flavor, grandfathered users,
+             shown until dismissed once, then never again. -->
+        <LinearLayout
+            android:id="@+id/gv_tipjar_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="16dp"
+            android:layout_marginTop="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/gv_tipjar_title"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/gv_text_primary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/gv_tipjar_body"
+                android:textSize="12sp"
+                android:textColor="@color/gv_text_secondary"
+                android:layout_marginTop="4dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end"
+                android:layout_marginTop="8dp">
+
+                <TextView
+                    android:id="@+id/btn_tipjar_dismiss"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/gv_tipjar_dismiss"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/gv_text_muted"
+                    android:padding="8dp" />
+
+                <TextView
+                    android:id="@+id/btn_tipjar_support"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/gv_tipjar_support"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/gv_accent"
+                    android:padding="8dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginLeft="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+
         <LinearLayout
             android:id="@+id/gv_consent_block"
             android:layout_width="match_parent"

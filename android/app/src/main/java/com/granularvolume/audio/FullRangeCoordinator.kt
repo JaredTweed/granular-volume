@@ -290,7 +290,7 @@ class FullRangeCoordinator(
         if (stream == AudioManager.STREAM_MUSIC && curve != null) {
             val rung = curve.rungs[pos.coerceIn(0, curve.rungs.lastIndex)]
             streamVol.setIndex(stream, rung.hardwareIndex)
-            audioController.setAttenuation(rung.remainderDb)
+            audioController.setAttenuation(rung.remainderDb, AudioController.GainSource.CURVE_REMAINDER)
         } else {
             // Raw-index path: in a call (voice stream — the media curve does not describe
             // it), rejected curve, or wireless Absolute Volume. Gain MUST stay 0 in call
@@ -298,7 +298,7 @@ class FullRangeCoordinator(
             // every position is a real hardware step, nothing to fill in.
             val top = streamVol.maxIndex(stream)
             streamVol.setIndex(stream, (top - pos).coerceAtLeast(streamVol.minAudibleIndex(stream)))
-            audioController.setAttenuation(0f)
+            audioController.setAttenuation(0f, AudioController.GainSource.SYSTEM)
         }
         zoneQuiet = false
         notifyUi()
@@ -312,7 +312,7 @@ class FullRangeCoordinator(
         if (isMuted) cancelMute()
         val media = AudioManager.STREAM_MUSIC
         streamVol.lowerTo(media, streamVol.minAudibleIndex(media))
-        audioController.setAttenuation(stepDb)
+        audioController.setAttenuation(stepDb, AudioController.GainSource.QUIET_STEP)
         zoneQuiet = true
         notifyUi()
     }
@@ -334,7 +334,7 @@ class FullRangeCoordinator(
     private fun cancelMute() {
         if (!isMuted) return
         streamVol.restoreMedia(preMuteIndex)
-        audioController.setAttenuation(preMuteAttenuation)
+        audioController.setAttenuation(preMuteAttenuation, AudioController.GainSource.SYSTEM)
         isMuted = false
         notifyUi()
     }
@@ -378,7 +378,7 @@ class FullRangeCoordinator(
         if (to - from == 1) {
             // Single button step up: absorb — back to floor, attenuation eases 5 dB.
             streamVol.lowerTo(stream, floor)
-            audioController.setAttenuation((current + VolumeCurve.RUNG_DB).coerceAtMost(0f))
+            audioController.setAttenuation((current + VolumeCurve.RUNG_DB).coerceAtMost(0f), AudioController.GainSource.SYSTEM)
             Log.i(tag, "Absorbed +1 step: attenuation ${current} -> ${current + VolumeCurve.RUNG_DB}")
         } else {
             // Large jump (an app set 70%): defend the quiet — floor restored, attenuation kept.

@@ -24,8 +24,8 @@ android {
         applicationId = "granularvolume.com"
         minSdk = 28
         targetSdk = 36          // Play requires API 36 (Android 16) for updates from Aug 31, 2026
-        versionCode = 18
-        versionName = "1.4.6"
+        versionCode = 19
+        versionName = "1.5.0"
     }
 
     // Distribution flavors: "play" keeps the Play-only in-app review prompt;
@@ -83,6 +83,8 @@ android {
     buildFeatures {
         // We use classic findViewById on XML layouts — no Compose, no view binding.
         viewBinding = false
+        // 1.5.0: BuildConfig.FLAVOR gates the tip-jar card to the play flavor.
+        buildConfig = true
     }
 
     compileOptions {

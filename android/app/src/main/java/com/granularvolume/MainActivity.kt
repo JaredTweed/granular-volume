@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import com.granularvolume.service.GranularVolumeTileService
 import com.granularvolume.service.VolumeControlService
 import com.granularvolume.util.PermissionHelper
+import com.granularvolume.util.ProAccess
 import com.granularvolume.util.Prefs
 import com.granularvolume.util.ReviewHelper
 
@@ -68,7 +69,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Full-range gate (1.5.0): the grandfather verdict must be taken before
+        // this session writes any prefs, or a fresh install could read its own
+        // fresh writes as prior use.
+        ProAccess.evaluateGrandfather(this)
+
         setupConsentGate()
+        setupTipjarCard()
 
         if (PermissionHelper.canDrawOverlays(this) &&
             PermissionHelper.hasModifyAudioSettings(this) &&
@@ -98,6 +105,28 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateStatus()
+    }
+
+    // -------------------------------------------------------------------------
+    // Grandfather tip-jar card (1.5.0) — play flavor only: the CTA points at
+    // Google Play, which means nothing to an F-Droid user.
+    // -------------------------------------------------------------------------
+
+    private fun setupTipjarCard() {
+        val card = findViewById<View>(R.id.gv_tipjar_card)
+        val show = BuildConfig.FLAVOR == "play" &&
+            Prefs.isGrandfathered(this) && !Prefs.wasTipjarCardShown(this)
+        card.visibility = if (show) View.VISIBLE else View.GONE
+        if (!show) return
+        findViewById<TextView>(R.id.btn_tipjar_dismiss).setOnClickListener {
+            Prefs.setTipjarCardShown(this)
+            card.visibility = View.GONE
+        }
+        findViewById<TextView>(R.id.btn_tipjar_support).setOnClickListener {
+            Prefs.setTipjarCardShown(this)
+            card.visibility = View.GONE
+            openUrl("market://details?id=com.granularvolume.key")
+        }
     }
 
     // -------------------------------------------------------------------------

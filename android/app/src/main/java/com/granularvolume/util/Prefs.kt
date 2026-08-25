@@ -24,6 +24,12 @@ object Prefs {
     private const val KEY_LINE_TOOLTIP_SHOWN = "line_tooltip_shown"
     private const val KEY_TERMS_ACCEPTED_VERSION = "terms_accepted_version"
 
+    // ── Pro / full-range gate (1.5.0) ───────────────────────────────
+    private const val KEY_GRANDFATHERED_PRO      = "grandfathered_pro"
+    private const val KEY_GRANDFATHER_EVALUATED  = "grandfather_evaluated"
+    private const val KEY_PREVIEW_STEP_DB        = "preview_step_db"
+    private const val KEY_TIPJAR_CARD_SHOWN      = "tipjar_card_shown"
+
     /** Current attenuation in dB (0.0 = none, -30.0 = near-silent) */
     const val ATTENUATION_DEFAULT = 0f
     const val ATTENUATION_MIN     = -30f
@@ -116,5 +122,63 @@ object Prefs {
 
     fun setTermsAcceptedVersion(context: Context, version: Int) {
         prefs(context).edit { putInt(KEY_TERMS_ACCEPTED_VERSION, version) }
+    }
+
+    // ── Pro / full-range gate (1.5.0) ───────────────────────────────
+
+    /**
+     * True iff any trace of pre-gate use exists. Several independent keys are
+     * checked because no single one covers every user: tile-driven users never
+     * increment the launch count, dial-only users may never touch the tile, and
+     * a user who granted overlay but never moved the dial still placed it once.
+     * Consulted exactly once, by ProAccess.evaluateGrandfather.
+     */
+    fun hasAnyPriorUse(context: Context): Boolean {
+        val p = prefs(context)
+        return p.getInt(KEY_LAUNCH_COUNT, 0) > 0 ||
+            p.getInt(KEY_TILE_ACTIVATIONS, 0) > 0 ||
+            p.getFloat(KEY_ATTENUATION_DB, ATTENUATION_DEFAULT) != ATTENUATION_DEFAULT ||
+            p.contains(KEY_OVERLAY_X) || p.contains(KEY_OVERLAY_Y) ||
+            p.getInt(KEY_TERMS_ACCEPTED_VERSION, 0) > 0
+    }
+
+    /** Sticky grandfather verdict. Written once; never flips back to false. */
+    fun isGrandfathered(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_GRANDFATHERED_PRO, false)
+
+    fun setGrandfathered(context: Context, grandfathered: Boolean) {
+        prefs(context).edit { putBoolean(KEY_GRANDFATHERED_PRO, grandfathered) }
+    }
+
+    fun wasGrandfatherEvaluated(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_GRANDFATHER_EVALUATED, false)
+
+    fun setGrandfatherEvaluated(context: Context) {
+        prefs(context).edit { putBoolean(KEY_GRANDFATHER_EVALUATED, true) }
+    }
+
+    /**
+     * The locked step the user previewed at the paywall, so a buyer returning
+     * from the store lands on exactly the depth they heard. NaN = none.
+     */
+    fun getPreviewStepDb(context: Context): Float? {
+        val v = prefs(context).getFloat(KEY_PREVIEW_STEP_DB, Float.NaN)
+        return if (v.isNaN()) null else v
+    }
+
+    fun setPreviewStepDb(context: Context, dB: Float) {
+        prefs(context).edit { putFloat(KEY_PREVIEW_STEP_DB, dB) }
+    }
+
+    fun clearPreviewStepDb(context: Context) {
+        prefs(context).edit { remove(KEY_PREVIEW_STEP_DB) }
+    }
+
+    /** One-time grandfather tip-jar card in MainActivity: shown once, never again. */
+    fun wasTipjarCardShown(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_TIPJAR_CARD_SHOWN, false)
+
+    fun setTipjarCardShown(context: Context) {
+        prefs(context).edit { putBoolean(KEY_TIPJAR_CARD_SHOWN, true) }
     }
 }

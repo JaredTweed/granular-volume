@@ -36,6 +36,17 @@
             </intent-filter>
         </activity>
 
+        <!-- Full-range paywall (1.5.0). Translucent host for the upgrade sheet,
+             launched by the service when a locked quiet step is tapped. Stays alive
+             (no noHistory) so the buyer returning from Google Play lands back on it
+             and the previewed depth is committed. Never launched in the F-Droid
+             build, where the full range is free and the gate never fires. -->
+        <activity
+            android:name=".PaywallActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.GranularVolume.Paywall" />
+
         <!-- Foreground service for audio effect + overlay -->
         <service
             android:name=".service.VolumeControlService"

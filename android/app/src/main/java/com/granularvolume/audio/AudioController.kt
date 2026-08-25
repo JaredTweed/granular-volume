@@ -18,9 +18,30 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class AudioController(private val context: Context) {
 
+    /** Deepest step available without Pro: 0 and −5 dB stay free, −10 and below unlock. */
+    private val FREE_FLOOR_DB = -5f
+
     private val tag = "GranularVolume:AudioCtrl"
 
     private var strategy: AudioEffectStrategy? = null
+
+    // ── Full-range gate (1.5.0) ─────────────────────────────────────
+    /**
+     * Answers "is the full quiet range unlocked on this device". Wired by the
+     * service to ProAccess. Defaults to open on purpose: if a future entry point
+     * forgets to wire it, the failure mode is a free full range, never a paying
+     * or grandfathered user losing depth.
+     */
+    var proProvider: () -> Boolean = { true }
+
+    /** Paywall live-preview: while true, gate checks are skipped (2.7). */
+    var previewBypass: Boolean = false
+
+    /**
+     * Fired when a non-Pro QUIET_STEP request was clamped — the paywall moment.
+     * Receives the depth the user asked for. UI-thread hop is the listener's job.
+     */
+    var onGateHit: ((requestedDb: Float) -> Unit)? = null
 
     /** Emits current attenuation in dB. UI observes this. */
     private val _attenuationDb = MutableStateFlow(Prefs.getAttenuation(context))
@@ -54,8 +75,9 @@ class AudioController(private val context: Context) {
                 strategy = s
                 isEffectAvailable = true
                 Log.i(tag, "Using strategy: ${s::class.simpleName}")
-                // Apply persisted attenuation immediately
-                applyAttenuation(_attenuationDb.value)
+                // Apply persisted attenuation immediately, THROUGH the gate: a stale
+                // deep level from a refunded or pre-gate state re-clamps at service start.
+                setAttenuation(_attenuationDb.value, GainSource.SYSTEM)
                 return true
             }
         }
@@ -66,22 +88,57 @@ class AudioController(private val context: Context) {
     }
 
     /**
-     * Sets attenuation level. Persists to prefs and updates StateFlow.
-     * Thread-safe: AudioEffect API is thread-safe internally.
-     * @param dB range [Prefs.ATTENUATION_MIN, Prefs.ATTENUATION_MAX]
+     * Where a gain request comes from — the gate treats each origin differently.
+     *
+     * The one exemption that makes this enum necessary: the full-range curve
+     * routes rung remainders through this same method, and a remainder is
+     * bounded by the LOCAL hardware step gap, which on coarse OEM volume curves
+     * can exceed 5 dB. A blind clamp would corrupt the FREE upper zone on
+     * exactly those devices.
      */
-    fun setAttenuation(dB: Float) {
-        val clamped = dB.coerceIn(Prefs.ATTENUATION_MIN, Prefs.ATTENUATION_MAX)
-        strategy?.setAttenuation(clamped)
-        _attenuationDb.value = clamped
-        Prefs.setAttenuation(context, clamped)
-        Log.d(tag, "Attenuation set to ${clamped}dB")
+    enum class GainSource {
+        /** A quiet-zone step the user picked. Gated; the only source that opens the paywall. */
+        QUIET_STEP,
+        /** Upper-zone curve remainder. NEVER gated: the upper zone is free by design. */
+        CURVE_REMAINDER,
+        /** Restores and internal writes (boot restore, mute cancel, absorb easing). Gated silently. */
+        SYSTEM,
+        /** The mute convenience. Gate-exempt by the locked decision: mute is free. */
+        MUTE,
     }
 
     /**
-     * Convenience: mute immediately (max attenuation).
+     * Sets attenuation level. Persists to prefs and updates StateFlow.
+     * Thread-safe: AudioEffect API is thread-safe internally.
+     * @param dB range [Prefs.ATTENUATION_MIN, Prefs.ATTENUATION_MAX]
+     * @param source who is asking — decides whether the free-floor gate applies
      */
-    fun mute() = setAttenuation(Prefs.ATTENUATION_MIN)
+    fun setAttenuation(dB: Float, source: GainSource = GainSource.SYSTEM) {
+        val requested = dB.coerceIn(Prefs.ATTENUATION_MIN, Prefs.ATTENUATION_MAX)
+        val clamped = if (gateOpen(source)) requested else {
+            val limited = requested.coerceAtLeast(FREE_FLOOR_DB)
+            if (limited != requested && source == GainSource.QUIET_STEP) {
+                Log.i(tag, "Gate: ${requested}dB requested, held at ${limited}dB")
+                onGateHit?.invoke(requested)
+            }
+            limited
+        }
+        strategy?.setAttenuation(clamped)
+        _attenuationDb.value = clamped
+        Prefs.setAttenuation(context, clamped)
+        Log.d(tag, "Attenuation set to ${clamped}dB (source=$source)")
+    }
+
+    private fun gateOpen(source: GainSource): Boolean =
+        previewBypass ||
+        source == GainSource.CURVE_REMAINDER ||
+        source == GainSource.MUTE ||
+        proProvider()
+
+    /**
+     * Convenience: mute immediately (max attenuation). Gate-exempt: mute is free.
+     */
+    fun mute() = setAttenuation(Prefs.ATTENUATION_MIN, GainSource.MUTE)
 
     /**
      * Convenience: pass-through (no attenuation).
@@ -121,7 +178,4 @@ class AudioController(private val context: Context) {
         Log.i(tag, "AudioController released")
     }
 
-    private fun applyAttenuation(dB: Float) {
-        strategy?.setAttenuation(dB)
-    }
 }

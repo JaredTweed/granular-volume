@@ -11,4 +11,12 @@
         <item name="android:statusBarColor" tools:targetApi="l">@color/gv_background</item>
     </style>
 
+
+    <!-- Full-range paywall host (1.5.0): invisible window, Material attributes
+         present so the BottomSheetDialog can resolve its theme overlay. -->
+    <style name="Theme.GranularVolume.Paywall">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
 </resources>

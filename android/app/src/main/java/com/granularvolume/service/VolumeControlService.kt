@@ -22,7 +22,9 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.granularvolume.MainActivity
 import com.granularvolume.R
+import com.granularvolume.PaywallActivity
 import com.granularvolume.audio.AudioController
+import com.granularvolume.util.ProAccess
 import com.granularvolume.audio.FullRangeCoordinator
 import com.granularvolume.audio.StreamVolumeController
 import com.granularvolume.overlay.OverlayManager
@@ -53,6 +55,13 @@ class VolumeControlService : Service() {
         private const val CHANNEL_ID   = "gv_volume_control"
         private const val NOTIFICATION_ID = 1001
         const val ACTION_STOP = "com.granularvolume.ACTION_STOP"
+
+        // Full-range paywall preview (1.5.0). END: revert to the free floor with a
+        // short ramp. COMMIT: the key arrived while previewing — keep the depth.
+        const val ACTION_PREVIEW_END = "com.granularvolume.ACTION_PREVIEW_END"
+        const val ACTION_PREVIEW_COMMIT = "com.granularvolume.ACTION_PREVIEW_COMMIT"
+        /** Failsafe: a preview nobody dismissed reverts on its own. */
+        private const val PREVIEW_TIMEOUT_MS = 5 * 60_000L
 
         // Hidden-but-stable system broadcast + extras (no public constants exist for these).
         private const val VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION"
@@ -130,6 +139,8 @@ class VolumeControlService : Service() {
     @Volatile
     private var stopRequestedByUser = false
 
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     override fun onCreate() {
         super.onCreate()
         Log.i(tag, "Service starting")
@@ -152,6 +163,29 @@ class VolumeControlService : Service() {
         }
 
         audioController = AudioController(applicationContext)
+
+        // Full-range gate (1.5.0): decide grandfathering once, then let the
+        // controller ask live on every gain decision. Must precede initialize(),
+        // which routes the boot-restore level through the gate.
+        ProAccess.evaluateGrandfather(applicationContext)
+        audioController.proProvider = { ProAccess.isPro(applicationContext) }
+
+        // A locked quiet step was tapped: apply it FOR REAL as a live preview
+        // (the strongest honest sales pitch is the silence itself), remember it
+        // for the return-from-store moment, and open the paywall sheet on top.
+        audioController.onGateHit = { requestedDb ->
+            mainHandler.post {
+                audioController.previewBypass = true
+                audioController.setAttenuation(requestedDb, AudioController.GainSource.QUIET_STEP)
+                Prefs.setPreviewStepDb(applicationContext, requestedDb)
+                mainHandler.removeCallbacks(previewTimeout)
+                mainHandler.postDelayed(previewTimeout, PREVIEW_TIMEOUT_MS)
+                startActivity(
+                    Intent(applicationContext, PaywallActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
+        }
         streamVolumeController = StreamVolumeController(applicationContext)
         coordinator = FullRangeCoordinator(applicationContext, audioController, streamVolumeController)
         overlayManager  = OverlayManager(
@@ -184,7 +218,6 @@ class VolumeControlService : Service() {
             androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
         )
         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val mainHandler = Handler(Looper.getMainLooper())
         am.registerAudioDeviceCallback(deviceCallback, mainHandler)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && modeListener != null) {
             am.addOnModeChangedListener({ r -> mainHandler.post(r) }, modeListener)
@@ -197,6 +230,7 @@ class VolumeControlService : Service() {
             Log.e(tag, "Failed to show overlay: ${e.message}", e)
             toast("Couldn't show the control: ${e.message}. Check 'Display over other apps'.")
         }
+        Prefs.clearPreviewStepDb(applicationContext)
         Prefs.setServiceWasRunning(applicationContext, true)
 
         // Update notification when attenuation changes
@@ -206,13 +240,52 @@ class VolumeControlService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_STOP) {
-            Log.i(tag, "Stop action received")
-            stopRequestedByUser = true
-            stopSelf()
+        when (intent?.action) {
+            ACTION_STOP -> {
+                Log.i(tag, "Stop action received")
+                stopRequestedByUser = true
+                stopSelf()
+            }
+            ACTION_PREVIEW_END -> endPreview()
+            ACTION_PREVIEW_COMMIT -> commitPreview()
         }
         return START_STICKY
     }
+
+    /** Paywall dismissed without buying: ramp back up to the free floor, no hard jump. */
+    private fun endPreview() {
+        if (!audioController.previewBypass) return
+        mainHandler.removeCallbacks(previewTimeout)
+        Prefs.clearPreviewStepDb(applicationContext)
+        val from = audioController.attenuationDb.value
+        val to = -5f
+        if (from >= to) { audioController.previewBypass = false; return }
+        // Three even ramp steps over ~300 ms, then close the bypass and land exactly.
+        val steps = 3
+        for (i in 1..steps) {
+            mainHandler.postDelayed({
+                val db = from + (to - from) * i / steps
+                if (i == steps) {
+                    audioController.previewBypass = false
+                    audioController.setAttenuation(to, AudioController.GainSource.SYSTEM)
+                } else {
+                    audioController.setAttenuation(db, AudioController.GainSource.SYSTEM)
+                }
+            }, 100L * i)
+        }
+    }
+
+    /** The key arrived while previewing: the buyer keeps the exact depth they heard. */
+    private fun commitPreview() {
+        mainHandler.removeCallbacks(previewTimeout)
+        val target = Prefs.getPreviewStepDb(applicationContext)
+            ?: audioController.attenuationDb.value
+        Prefs.clearPreviewStepDb(applicationContext)
+        audioController.previewBypass = false
+        audioController.setAttenuation(target, AudioController.GainSource.QUIET_STEP)
+    }
+
+    private val previewTimeout = Runnable { endPreview() }
 
     override fun onDestroy() {
         Log.i(tag, "Service stopping (userRequested=$stopRequestedByUser)")
