@@ -75,11 +75,11 @@ class MainActivity : AppCompatActivity() {
         ProAccess.evaluateGrandfather(this)
 
         setupConsentGate()
-        setupTipjarCard()
+        val tipjarShowing = setupTipjarCard()
 
         if (PermissionHelper.canDrawOverlays(this) &&
             PermissionHelper.hasModifyAudioSettings(this) &&
-            hasAcceptedTerms()) {
+            hasAcceptedTerms() && !tipjarShowing) {
             // A return visit — the app is already set up and working. This is the
             // right moment to (rarely, at most once) ask for a review, before the
             // usual auto-launch-and-finish flow continues exactly as before.
@@ -112,12 +112,17 @@ class MainActivity : AppCompatActivity() {
     // Google Play, which means nothing to an F-Droid user.
     // -------------------------------------------------------------------------
 
-    private fun setupTipjarCard() {
+    /**
+     * @return true while the card is due, which also holds the auto-launch-and-finish
+     * fast path open for one visit — otherwise the activity closes itself before the
+     * grandfathered user could ever see the card.
+     */
+    private fun setupTipjarCard(): Boolean {
         val card = findViewById<View>(R.id.gv_tipjar_card)
         val show = BuildConfig.FLAVOR == "play" &&
             Prefs.isGrandfathered(this) && !Prefs.wasTipjarCardShown(this)
         card.visibility = if (show) View.VISIBLE else View.GONE
-        if (!show) return
+        if (!show) return false
         findViewById<TextView>(R.id.btn_tipjar_dismiss).setOnClickListener {
             Prefs.setTipjarCardShown(this)
             card.visibility = View.GONE
@@ -127,6 +132,7 @@ class MainActivity : AppCompatActivity() {
             card.visibility = View.GONE
             openUrl("market://details?id=com.granularvolume.key")
         }
+        return true
     }
 
     // -------------------------------------------------------------------------
