@@ -46,7 +46,7 @@
     <string name="gv_paywall_title">Unlock the full quiet range</string>
     <string name="gv_paywall_depth">Seven steps, down to −30 dB below the system minimum.</string>
     <string name="gv_paywall_body">One-time purchase. No subscription. The app stays free of ads, tracking and internet access.</string>
-    <string name="gv_paywall_preview_note">You are hearing this step right now, as a live preview.</string>
+    <string name="gv_paywall_preview_note">You are hearing this step right now. The preview runs for 30 seconds, then the dial eases back to the free level. Tap any locked step to hear it again.</string>
     <string name="gv_paywall_expectation">Google Play will open on a small companion app, Full Range Key. Buying and installing it is the whole unlock, and these steps open here straight away.</string>
     <string name="gv_paywall_cta">Get Full Range Key on Google Play</string>
     <string name="gv_paywall_not_now">Not now</string>

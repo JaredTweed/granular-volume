@@ -60,8 +60,20 @@ class VolumeControlService : Service() {
         // short ramp. COMMIT: the key arrived while previewing — keep the depth.
         const val ACTION_PREVIEW_END = "com.granularvolume.ACTION_PREVIEW_END"
         const val ACTION_PREVIEW_COMMIT = "com.granularvolume.ACTION_PREVIEW_COMMIT"
-        /** Failsafe: a preview nobody dismissed reverts on its own. */
-        private const val PREVIEW_TIMEOUT_MS = 5 * 60_000L
+        /** How long a previewed step keeps playing before the dial returns to the free floor. */
+        private const val PREVIEW_TIMEOUT_MS = 30_000L
+
+        /**
+         * The return ramp is timed by HOW FAR it has to travel, not by a fixed duration.
+         *
+         * A preview of -10 rises 5 dB when it ends, which is nothing. A preview of -30 rises
+         * **25 dB**, and doing that in 300 ms while music is playing is a sudden loudness event
+         * of exactly the kind this app exists to prevent, in front of an audience that includes
+         * people with hearing sensitivity. So: a floor for short hops, plus time per dB.
+         */
+        private const val RAMP_BASE_MS = 220L
+        private const val RAMP_MS_PER_DB = 42L
+        private const val RAMP_TICK_MS = 60L
 
         // Hidden-but-stable system broadcast + extras (no public constants exist for these).
         private const val VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION"
@@ -260,18 +272,23 @@ class VolumeControlService : Service() {
         val from = audioController.attenuationDb.value
         val to = -5f
         if (from >= to) { audioController.previewBypass = false; return }
-        // Three even ramp steps over ~300 ms, then close the bypass and land exactly.
-        val steps = 3
+
+        val distanceDb = to - from                                   // always positive here
+        val duration = RAMP_BASE_MS + (distanceDb * RAMP_MS_PER_DB).toLong()
+        val steps = (duration / RAMP_TICK_MS).toInt().coerceAtLeast(3)
+        Log.i(tag, "Preview ending: ${from}dB -> ${to}dB over ${duration}ms in $steps steps")
+
         for (i in 1..steps) {
             mainHandler.postDelayed({
-                val db = from + (to - from) * i / steps
                 if (i == steps) {
                     audioController.previewBypass = false
                     audioController.setAttenuation(to, AudioController.GainSource.SYSTEM)
                 } else {
-                    audioController.setAttenuation(db, AudioController.GainSource.SYSTEM)
+                    audioController.setAttenuation(
+                        from + distanceDb * i / steps, AudioController.GainSource.SYSTEM
+                    )
                 }
-            }, 100L * i)
+            }, duration * i / steps)
         }
     }
 
