@@ -2,6 +2,28 @@
 
 All notable changes to Granular Volume are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 1.5.0 (versionCode 19)
+
+**If you already use this app, nothing changes for you.** Every step you have today stays yours,
+free, on this device.
+
+### Added
+- An optional one-time unlock for the deeper quiet steps, sold as a separate companion app on
+  Google Play. New installs get volume control across the normal range and the first step below
+  the device minimum free and permanently; the steps below that unlock with the purchase.
+- Tapping a locked step plays it for real for thirty seconds, so you hear exactly what you would
+  be buying before you decide. The level then eases back to the free range over about a second,
+  timed by how far it has to climb so it is a fade rather than a jump.
+- An open source licences screen, reachable from the main screen, listing every bundled component
+  with its licence and the full Apache-2.0 text.
+
+### Changed
+- Terms of Use updated for the optional purchase; the app asks you to accept them once.
+
+### Unchanged
+- The F-Droid build includes every step at no charge, permanently, with no purchase feature in it.
+- No ads, no tracking, no accounts, and still no internet permission in any version.
+
 ## 1.4.6 (versionCode 18)
 
 Reliability release for in-call control, closing the intermittency 1.4.5 left behind. That release re-attached the audio effect once, at the instant the audio mode changed, and that single moment can lose three races: on some phones the call's output path opens a beat after the mode flips, so the re-attach landed on the old path; switching to speaker or Bluetooth mid-call moved the voice audio to an output the effect never followed; and a transient effect-initialisation failure during call setup stranded the app on the weaker fallback with no retry. Each race explains the same field report: control worked in some calls and not in others.

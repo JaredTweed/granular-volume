@@ -33,7 +33,7 @@ BLEIBT IM HINTERGRUND
 Granular Volume übernimmt Ihre Lautstärketasten nicht: Sie funktionieren weiter, und in der leisen Zone übersetzt der Regler ihre Schritte in seine feinere Skala. Es ersetzt weder das System-Lautstärkefeld noch drängt es Ihnen einen Equalizer auf. Es liegt als Overlay ruhig obenauf und ändert eine Sache: den Pegel, von normaler Lautstärke bis unter Ihr Hardware-Minimum.
 
 PRIVAT, OPEN SOURCE
-Kostenlos zu installieren. Die Lautstaerkeregelung im normalen Bereich und die erste Stufe unter dem Geraeteminimum sind dauerhaft kostenlos; die tieferen Stufen sind ein einmaliger Kauf. Keine Werbung. Kein Tracking. Keine Internet-Berechtigung, die App kann sich mit nichts verbinden. Kein Konto, keine Anmeldung, keine Analyse. Open Source unter GPL-3.0.
+Kostenlos zu installieren. Die Lautstaerkeregelung im normalen Bereich und die erste Stufe unter dem Geraeteminimum sind dauerhaft kostenlos. Im Google Play Store sind die tieferen Stufen ein einmaliger Kauf; diese F-Droid-Version enthaelt alle Stufen kostenlos. Keine Werbung. Kein Tracking. Keine Internet-Berechtigung, die App kann sich mit nichts verbinden. Kein Konto, keine Anmeldung, keine Analyse. Open Source unter GPL-3.0.
 
 BERECHTIGUNGEN, ERKLÄRT
 - Über anderen Apps einblenden: zeigt den schwebenden Regler an

@@ -59,7 +59,21 @@ class MainActivity : AppCompatActivity() {
          * Version of the Terms this build presents. Bump ONLY on a material change to the
          * Terms, which re-prompts every existing user. Cosmetic edits must not bump it.
          */
-        const val TERMS_VERSION = 1
+        /**
+         * Version 2, bumped for the 1.5.0 Terms.
+         *
+         * The earlier reasoning for NOT bumping was that the new sections governed only the
+         * optional purchase and took nothing from anyone. Re-reading the finished text, that
+         * is no longer true: section 14 takes a licence to a user's feedback, section 16 asks
+         * for an export and sanctions representation, and section 7 gained an age and capacity
+         * representation. Those bind every user, buyer or not, and none of them existed in the
+         * version people actually accepted.
+         *
+         * A bump costs one screen on the next launch and does not touch a running service, so
+         * the people most likely to interact, and to buy, will have actively accepted the text
+         * that governs them.
+         */
+        const val TERMS_VERSION = 2
 
         private const val URL_TERMS = "https://rzuss.github.io/granular-volume-privacy/terms-of-use.html"
         private const val URL_PRIVACY = "https://rzuss.github.io/granular-volume-privacy/"
