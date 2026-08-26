@@ -75,6 +75,9 @@ class MainActivity : AppCompatActivity() {
         ProAccess.evaluateGrandfather(this)
 
         setupConsentGate()
+        findViewById<TextView>(R.id.tv_link_licenses).setOnClickListener {
+            startActivity(Intent(this, LicensesActivity::class.java))
+        }
         val tipjarShowing = setupTipjarCard()
 
         if (PermissionHelper.canDrawOverlays(this) &&

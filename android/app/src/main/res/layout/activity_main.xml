@@ -366,5 +366,19 @@
             android:maxLines="1"
             android:layout_marginTop="12dp" />
 
+
+        <!-- Persistent legal footer. The consent block disappears once accepted, so the
+             licences screen needs a way in that does not. -->
+        <TextView
+            android:id="@+id/tv_link_licenses"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/gv_open_licenses"
+            android:textSize="12sp"
+            android:textColor="@color/gv_text_muted"
+            android:padding="12dp"
+            android:layout_marginTop="10dp" />
+
     </LinearLayout>
 </ScrollView>

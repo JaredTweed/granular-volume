@@ -36,6 +36,15 @@
             </intent-filter>
         </activity>
 
+        <!-- Open-source notices. Required by the Apache-2.0 licences of the bundled
+             libraries, which oblige us to pass on their attribution notices and a copy of
+             the licence. Reachable from the main screen at any time. -->
+        <activity
+            android:name=".LicensesActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:label="@string/gv_licenses_title" />
+
         <!-- Full-range paywall (1.5.0). Translucent host for the upgrade sheet,
              launched by the service when a locked quiet step is tapped. Stays alive
              (no noHistory) so the buyer returning from Google Play lands back on it

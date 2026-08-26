@@ -59,4 +59,15 @@
     <string name="gv_tipjar_support">Support</string>
     <string name="gv_tipjar_dismiss">Dismiss</string>
 
+
+    <!-- Open-source notices (1.5.0) -->
+    <string name="gv_licenses_title">Open source licences</string>
+    <string name="gv_licenses_intro">This app is built on the work of others. The components below are included in it, each under its own licence.</string>
+    <string name="gv_licenses_oss">Open source components</string>
+    <string name="gv_licenses_proprietary">Other components</string>
+    <string name="gv_licenses_own">This app</string>
+    <string name="gv_licenses_own_body">Volume Control: Quiet Dial is itself free software under the GNU General Public License version 3.0. The complete source is at github.com/Rzuss/granular-volume.</string>
+    <string name="gv_licenses_apache">Apache License 2.0, full text</string>
+    <string name="gv_open_licenses">Open source licences</string>
+
 </resources>
