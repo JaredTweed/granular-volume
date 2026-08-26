@@ -39,7 +39,7 @@
     {"@type":"Question","name":"Does it lower ringtone and notification volume too?","acceptedAnswer":{"@type":"Answer","text":"Yes. Ringtones, notification sounds, alarms, call audio and media are all affected. Each of those was tested directly by playing the sound and moving the dial down through its steps, and the level drops every time."}},
     {"@type":"Question","name":"Why can nothing lower my keyboard clicks and UI touch sounds?","acceptedAnswer":{"@type":"Answer","text":"Those particular sounds take a different route through Android. Keyboard taps and interface clicks are played on a dedicated low-latency audio path that deliberately skips audio post-processing, because processing adds delay and instant response is the entire reason that path exists. Any app that lowers volume by attaching an effect to the system output is therefore unable to reach them. This is a boundary in Android itself rather than a missing feature, so treat any app that promises to quiet keyboard clicks with suspicion."}},
     {"@type":"Question","name":"Does it need root, ADB or a computer?","acceptedAnswer":{"@type":"Answer","text":"No. It uses Android's own audio-effect framework, needs only a display-over-other-apps permission and standard audio permissions, and requires no root, no ADB and no computer."}},
-    {"@type":"Question","name":"Is it free and private?","acceptedAnswer":{"@type":"Answer","text":"Yes. Free, no ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. It is open source under GPL-3.0."}}
+    {"@type":"Question","name":"Is it free and private?","acceptedAnswer":{"@type":"Answer","text":"Yes. Free to install, with volume control across the normal range and the first step below your device minimum free permanently; the deeper steps are a one-time purchase. No ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0, and the F-Droid build has every step at no charge."}}
   ]
 }
 </script>
@@ -150,7 +150,7 @@
 
     <div class="quickfix">
       <div class="kicker">Short on time? Here's the answer</div>
-      <p>Android keeps alarms on their own volume stream, and the bottom of that stream is a real audible level rather than a quiet one. Everything inside Settings works within that range. <strong>Granular Volume</strong> adds steps below it, by applying negative gain to the system's audio output after Android has already applied its own minimum. It affects alarms, ringtones, notifications, calls and media. Free, no root, no ads.</p>
+      <p>Android keeps alarms on their own volume stream, and the bottom of that stream is a real audible level rather than a quiet one. Everything inside Settings works within that range. <strong>Granular Volume</strong> adds steps below it, by applying negative gain to the system's audio output after Android has already applied its own minimum. It affects alarms, ringtones, notifications, calls and media. No root, no ads.</p>
       <div class="cta">
         <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=granularvolume.com">Get it on Google Play</a>
         <a class="btn btn-ghost" href="#fix">How it gets below the floor</a>
@@ -229,7 +229,7 @@
 
     <div class="callout">
       <h2>Get under the alarm's floor</h2>
-      <p>Seven steps between the system minimum and silence, on alarms, ringtones, notifications, calls and media, and since 1.4.0 the same slider also covers the normal range above the minimum. A floating dial, about three taps from opening the app. Free, open source, no ads, no tracking, no account, and no internet permission at all.</p>
+      <p>Seven steps between the system minimum and silence, on alarms, ringtones, notifications, calls and media, and since 1.4.0 the same slider also covers the normal range above the minimum. A floating dial, about three taps from opening the app. Open source, no ads, no tracking, no account, and no internet permission at all.</p>
       <div class="cta">
         <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=granularvolume.com">Get it on Google Play</a>
         <a class="btn btn-ghost" href="lower-android-volume-below-minimum.html">The full below-minimum guide</a>
@@ -256,7 +256,7 @@
       <dt>Does it need root, ADB or a computer?</dt>
       <dd>No. It uses Android's own audio-effect framework, needs only a display-over-other-apps permission and standard audio permissions, and requires no root, ADB or computer.</dd>
       <dt>Is it free and private?</dt>
-      <dd>Yes. Free, no ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0.</dd>
+      <dd>Yes. Free to install, with volume control across the normal range and the first step below your device minimum free permanently; the deeper steps are a one-time purchase. No ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0, and the F-Droid build has every step at no charge.</dd>
     </dl>
   </article>
 

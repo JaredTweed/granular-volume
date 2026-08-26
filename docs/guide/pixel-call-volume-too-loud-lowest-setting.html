@@ -38,7 +38,7 @@
     {"@type":"Question","name":"Is this a fault with my Pixel, or is a repair needed?","acceptedAnswer":{"@type":"Answer","text":"Usually neither. If the hearing aid setting is off and the earpiece still feels too loud at the minimum, the phone is behaving as designed. The same complaint recurs across several Pixel generations in Google's own support community, which points at how the volume scale is defined rather than at a hardware defect on any one unit."}},
     {"@type":"Question","name":"What actually adds a quieter level below the minimum?","acceptedAnswer":{"@type":"Answer","text":"Lowering the volume through Android's own audio effect framework, after the system has already applied its own minimum. That places the output below where the volume keys stop. Granular Volume does this with a small floating dial, and the developer verified on real hardware during a live call that call volume audibly drops with the dial active."}},
     {"@type":"Question","name":"Does it need root, a computer, or a Google account?","acceptedAnswer":{"@type":"Answer","text":"No. It uses Android's own audio effect framework, needs only a display over other apps permission and standard audio permissions, and requires no root, no ADB and no computer."}},
-    {"@type":"Question","name":"Is it free and private?","acceptedAnswer":{"@type":"Answer","text":"Yes. Free, no ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. It is open source under GPL-3.0."}}
+    {"@type":"Question","name":"Is it free and private?","acceptedAnswer":{"@type":"Answer","text":"Yes. Free to install, with volume control across the normal range and the first step below your device minimum free permanently; the deeper steps are a one-time purchase. No ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0, and the F-Droid build has every step at no charge."}}
   ]
 }
 </script>
@@ -145,7 +145,7 @@
     <div class="quickfix">
       <div class="kicker">Short on time</div>
       <p><strong>First, check the hearing aid setting.</strong> Phone app, three line menu, Settings, Accessibility, Hearing aids. If it is on, that alone can make the earpiece far louder than normal. Free, instant, reversible.</p>
-      <p><strong>If that was not it,</strong> the ordinary in-call floor is simply too high on your device, and nothing in the stock settings goes below it. <strong>Granular Volume</strong> adds quieter steps underneath Android's own minimum. On most phones this works during calls as well; a small number of devices route call audio through hardware that no app can reach, and on those calls are not affected. Free, no root.</p>
+      <p><strong>If that was not it,</strong> the ordinary in-call floor is simply too high on your device, and nothing in the stock settings goes below it. <strong>Granular Volume</strong> adds quieter steps underneath Android's own minimum. On most phones this works during calls as well; a small number of devices route call audio through hardware that no app can reach, and on those calls are not affected. No root.</p>
       <div class="cta">
         <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=granularvolume.com">Get it on Google Play</a>
         <a class="btn btn-ghost" href="#fix">Why this works, others don't</a>
@@ -227,7 +227,7 @@
 
     <div class="callout">
       <h2>Take a call in a quiet room without holding the phone away from your ear</h2>
-      <p>If the hearing aid setting was not the culprit and the lowest call volume is still too loud, this adds the levels underneath it, for the earpiece and the speaker. Free, open source, no ads, no tracking, no account, and no internet permission at all.</p>
+      <p>If the hearing aid setting was not the culprit and the lowest call volume is still too loud, this adds the levels underneath it, for the earpiece and the speaker. Open source, no ads, no tracking, no account, and no internet permission at all.</p>
       <div class="cta">
         <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=granularvolume.com">Get it on Google Play</a>
         <a class="btn btn-ghost" href="call-volume-too-loud-android.html">The general call volume guide</a>
@@ -252,7 +252,7 @@
       <dt>Does it need root, a computer, or a Google account?</dt>
       <dd>No. It uses Android's own audio-effect framework, needs only a display-over-other-apps permission and standard audio permissions, and requires no root, ADB, or computer.</dd>
       <dt>Is it free and private?</dt>
-      <dd>Yes. Free, no ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0.</dd>
+      <dd>Yes. Free to install, with volume control across the normal range and the first step below your device minimum free permanently; the deeper steps are a one-time purchase. No ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0, and the F-Droid build has every step at no charge.</dd>
     </dl>
   </article>
 
