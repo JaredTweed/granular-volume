@@ -344,7 +344,7 @@ def make_social_preview():
     d.text((tx, s(int(292 * SCALE))), "Volume below Android's minimum.", font=reg(int(33 * SCALE)), fill=SOFT, anchor="lm")
     by = s(int(346 * SCALE))
     bx = tx
-    for badge in ["Free", "No ads", "Open source", "F-Droid"]:
+    for badge in ["No ads", "No tracking", "Open source", "F-Droid"]:
         bw = int(d.textlength(badge, font=semi(int(23 * SCALE)))) + s(int(40 * SCALE))
         bh = s(int(46 * SCALE))
         d.rounded_rectangle([bx, by, bx + bw, by + bh], radius=bh // 2,

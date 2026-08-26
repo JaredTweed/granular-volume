@@ -1,3 +1,10 @@
+# PRICE-CLAIM NOTE (2026-08-25). This file used to render the word "Free" into the
+# footer of every screenshot, into the feature graphic's badge row, and into
+# screenshot 8's headline. Under the unlock-key model that claim became unqualified
+# and misleading, and no text search could ever have found it, because it is pixels.
+# The price statement now lives ONLY in the store description, where there is room to
+# state the boundary exactly. Do not put a price word back into an image: an image
+# cannot carry the qualifier that makes it true.
 """
 Granular Volume - Play Store marketing assets v4.
 Philosophy: "Quiet Instrument" (see DESIGN-PHILOSOPHY.md).
@@ -448,7 +455,7 @@ def header(d, lines, sub):
 def footer(d):
     d.text((W // 2, H - s(82)), "Granular Volume", font=semi(32), fill=(244, 246, 251, 220),
            anchor="mm")
-    d.text((W // 2, H - s(44)), "Free   .   No ads   .   Open source", font=reg(26),
+    d.text((W // 2, H - s(44)), "No ads   .   No tracking   .   Open source", font=reg(26),
            fill=(199, 203, 236, 150), anchor="mm")
 
 def build(idx, lines, sub, content_fn, accent=VIOLET):
@@ -587,7 +594,7 @@ def c_noninvasive(d, sx, sy, sw, sh):
 
 def c_trust(d, sx, sy, sw, sh):
     dim_app(d, sx, sy, sw, sh)
-    items = ["Completely free", "No advertisements", "No data collected",
+    items = ["No advertisements", "No data collected",
              "No internet access", "Open source"]
     lx = sx + int(sw * 0.13)
     cy = sy + int(sh * 0.15)
@@ -761,7 +768,7 @@ def make_feature():
     d.text((tx, s(292)), "Quieter than your phone or tablet allows.", font=reg(28), fill=SOFT, anchor="lm")
     by = s(346)
     bx = tx
-    for badge in ["Free", "No ads", "Open source"]:
+    for badge in ["No ads", "No tracking", "Open source"]:
         bw = int(d.textlength(badge, font=semi(23))) + s(40)
         d.rounded_rectangle([bx, by, bx + bw, by + s(46)], radius=s(23),
                             fill=(108, 99, 255, 45), outline=(108, 99, 255, 160), width=s(1))
@@ -847,6 +854,6 @@ build(6, ["Always within reach"],
       "Drag it anywhere. Close it with one tap.", c_drag)
 build(7, ["One tap from", "Quick Settings"],
       "Turn it on or off without opening the app", c_qstile)
-build(8, ["Free, private, open"],
+build(8, ["Private by design"],
       "No ads. No tracking. GPL-3.0.", c_trust)
 print("Done. Assets saved to:", OUT)
