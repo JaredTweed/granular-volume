@@ -29,6 +29,7 @@ object Prefs {
     private const val KEY_GRANDFATHER_EVALUATED  = "grandfather_evaluated"
     private const val KEY_PREVIEW_STEP_DB        = "preview_step_db"
     private const val KEY_TIPJAR_CARD_SHOWN      = "tipjar_card_shown"
+    private const val KEY_UNLOCK_ACKNOWLEDGED    = "unlock_acknowledged"
 
     /** Current attenuation in dB (0.0 = none, -30.0 = near-silent) */
     const val ATTENUATION_DEFAULT = 0f
@@ -180,5 +181,17 @@ object Prefs {
 
     fun setTipjarCardShown(context: Context) {
         prefs(context).edit { putBoolean(KEY_TIPJAR_CARD_SHOWN, true) }
+    }
+
+    /**
+     * One-time purchase confirmation. A buyer can return from the store by several paths,
+     * and only one of them keeps the paywall alive to say thank you. This makes the
+     * acknowledgement independent of the path taken.
+     */
+    fun wasUnlockAcknowledged(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_UNLOCK_ACKNOWLEDGED, false)
+
+    fun setUnlockAcknowledged(context: Context) {
+        prefs(context).edit { putBoolean(KEY_UNLOCK_ACKNOWLEDGED, true) }
     }
 }

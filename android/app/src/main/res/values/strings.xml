@@ -47,8 +47,8 @@
     <string name="gv_paywall_depth">Seven steps, down to −30 dB below the system minimum.</string>
     <string name="gv_paywall_body">One-time purchase. No subscription. The app stays free of ads, tracking and internet access.</string>
     <string name="gv_paywall_preview_note">You are hearing this step right now, as a live preview.</string>
-    <string name="gv_paywall_expectation">Payment takes about 20 seconds on Google Play.</string>
-    <string name="gv_paywall_cta">Get the key on Google Play</string>
+    <string name="gv_paywall_expectation">Google Play will open on a small companion app, Full Range Key. Buying and installing it is the whole unlock, and these steps open here straight away.</string>
+    <string name="gv_paywall_cta">Get Full Range Key on Google Play</string>
     <string name="gv_paywall_not_now">Not now</string>
     <string name="gv_paywall_terms">By upgrading, you agree to our Terms of Use</string>
     <string name="gv_paywall_unlocked">Full range unlocked. Enjoy the quiet.</string>
@@ -69,5 +69,11 @@
     <string name="gv_licenses_own_body">Volume Control: Quiet Dial is itself free software under the GNU General Public License version 3.0. The complete source is at github.com/Rzuss/granular-volume.</string>
     <string name="gv_licenses_apache">Apache License 2.0, full text</string>
     <string name="gv_open_licenses">Open source licences</string>
+
+
+    <!-- Purchase confirmation, shown once, on whichever path the buyer comes back by -->
+    <string name="gv_unlocked_title">Full range unlocked</string>
+    <string name="gv_unlocked_body">Thank you. Every step down to −30 dB is open on this device now. Start the control and choose any step below the orange line.</string>
+    <string name="gv_unlocked_dismiss">Got it</string>
 
 </resources>

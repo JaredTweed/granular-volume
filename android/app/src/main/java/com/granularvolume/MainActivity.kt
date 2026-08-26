@@ -122,6 +122,26 @@ class MainActivity : AppCompatActivity() {
      */
     private fun setupTipjarCard(): Boolean {
         val card = findViewById<View>(R.id.gv_tipjar_card)
+
+        // A buyer and a grandfathered user are mutually exclusive, so one card slot serves
+        // both. The purchase confirmation takes priority: it is the one a person paid for.
+        if (BuildConfig.FLAVOR == "play" && !Prefs.isGrandfathered(this) &&
+            !Prefs.wasUnlockAcknowledged(this) && ProAccess.isPro(this)
+        ) {
+            card.visibility = View.VISIBLE
+            findViewById<TextView>(R.id.tv_card_title).setText(R.string.gv_unlocked_title)
+            findViewById<TextView>(R.id.tv_card_body).setText(R.string.gv_unlocked_body)
+            findViewById<TextView>(R.id.btn_tipjar_support).visibility = View.GONE
+            findViewById<TextView>(R.id.btn_tipjar_dismiss).apply {
+                setText(R.string.gv_unlocked_dismiss)
+                setOnClickListener {
+                    Prefs.setUnlockAcknowledged(this@MainActivity)
+                    card.visibility = View.GONE
+                }
+            }
+            return true
+        }
+
         val show = BuildConfig.FLAVOR == "play" &&
             Prefs.isGrandfathered(this) && !Prefs.wasTipjarCardShown(this)
         card.visibility = if (show) View.VISIBLE else View.GONE

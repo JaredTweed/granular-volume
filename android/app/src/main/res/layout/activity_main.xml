@@ -217,6 +217,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/tv_card_title"
                 android:text="@string/gv_tipjar_title"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -225,6 +226,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:id="@+id/tv_card_body"
                 android:text="@string/gv_tipjar_body"
                 android:textSize="12sp"
                 android:textColor="@color/gv_text_secondary"
