@@ -28,14 +28,16 @@ object KeyCheck {
      * Accepted signing certificates, SHA-256, lowercase hex, no separators.
      *
      *  1. The upload/local keystore cert (granularvolume-release.jks) — covers
-     *     locally signed builds and the internal-track APK before Play re-signs.
-     *  2. ⚠ TODO BEFORE LAUNCH (runbook 1.6): after the key app's first upload,
-     *     read the "App signing key certificate" SHA-256 from its Play Console
-     *     page and ADD it here — Google re-signs new apps, so the cert users
-     *     actually receive is Google's, not ours. Launch is blocked on this.
+     *     locally signed builds and sideloaded internal builds.
+     *  2. Google's Play App Signing certificate for com.granularvolume.key —
+     *     the cert every real buyer receives, because Play re-signs new apps.
+     *     Read 2026-08-26 from the key app's Play Console App signing page,
+     *     cross-checked against the Digital Asset Links JSON on the same page
+     *     (both carry the identical fingerprint). Runbook gate C3, closed.
      */
     private val PINNED_CERT_SHA256 = setOf(
         "01cc6025ffce326c32324a3e441355dbdc3934abd2d656bed1b2ec62ff0cced8",
+        "48ad313f90590fc346ba99cb93d77866ecfdc1336c1dd5c945037bb9c8d5e6f1",
     )
 
     fun isKeyInstalled(context: Context): Boolean {
