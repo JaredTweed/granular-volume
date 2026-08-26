@@ -12,14 +12,14 @@
     <string name="gv_state_granted">Granted</string>
     <string name="gv_state_needed">Needed</string>
     <string name="gv_hint_grant_first">Grant overlay access to continue</string>
-    <string name="gv_hint_ready">You\'re all set — start the control</string>
+    <string name="gv_hint_ready">You\'re all set, start the control</string>
     <string name="gv_app_glyph">App icon</string>
 
     <!-- Overlay -->
     <string name="gv_dismiss">Close volume control</string>
     <string name="gv_drag_handle">Drag to reposition</string>
-    <string name="gv_louder">Louder — reduce attenuation</string>
-    <string name="gv_quieter">Quieter — increase attenuation</string>
+    <string name="gv_louder">Louder, reduce attenuation</string>
+    <string name="gv_quieter">Quieter, increase attenuation</string>
     <string name="gv_mute">Mute media</string>
     <string name="gv_divider_desc">Device minimum volume line</string>
     <string name="gv_line_tooltip">below the line:\nquieter than your\ndevice minimum</string>
