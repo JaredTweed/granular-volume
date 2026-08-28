@@ -136,7 +136,17 @@ class AudioController(private val context: Context) {
         }
         strategy?.setAttenuation(clamped)
         _attenuationDb.value = clamped
-        Prefs.setAttenuation(context, clamped)
+        // Persist ONLY what the user is entitled to keep. The stored level is the place
+        // the dial returns to, and every public surface promises a buyer "every step comes
+        // back exactly where you left it" -- so a locked session must never overwrite it.
+        // Concretely: while entitled (grandfathered, trial, key) every change persists as
+        // before; while locked, nothing does, so the level from the last entitled day
+        // survives clamps, previews and ramps untouched, and the first entitled start
+        // after the purchase restores it. previewBypass deliberately does not count as
+        // entitlement here: a preview is a demonstration, not a place the user chose to
+        // keep, and the one preview worth keeping -- the one that ends in a purchase --
+        // is re-applied by commitPreview after the key arrives, when this persists again.
+        if (proProvider()) Prefs.setAttenuation(context, clamped)
         Log.d(tag, "Attenuation set to ${clamped}dB (source=$source)")
     }
 

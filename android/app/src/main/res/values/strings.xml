@@ -67,6 +67,9 @@
     <string name="gv_info_restore">New phone or a reinstall? Install the key again from Google Play with the same account. It is never charged twice, and that is the whole restore.</string>
     <string name="gv_info_terms">Terms of Use</string>
     <string name="gv_info_privacy">Privacy Policy</string>
+    <string name="gv_info_state_fdroid">Free and complete, always</string>
+    <string name="gv_info_body_fdroid">This F-Droid build includes everything: the full dial, every quiet step and mute, at no charge, permanently. There is nothing to buy and nothing to unlock.</string>
+    <string name="gv_info_restore_grandfathered">New phone? Your free access travels with your own Google account backup, so it normally follows you there by itself.</string>
 
     <!-- Trial (1.5.0) -->
     <plurals name="gv_trial_days_left">

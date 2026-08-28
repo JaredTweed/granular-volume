@@ -62,7 +62,7 @@ class InfoSheetActivity : AppCompatActivity() {
 
     // -- state ----------------------------------------------------------------
 
-    private enum class State { GRANDFATHERED, TRIAL, UNLOCKED, LOCKED }
+    private enum class State { FDROID, GRANDFATHERED, TRIAL, UNLOCKED, LOCKED }
 
     /**
      * Order matters and mirrors [ProAccess.isPro]: a grandfathered device that also owns
@@ -70,6 +70,11 @@ class InfoSheetActivity : AppCompatActivity() {
      * one they would be upset to see disappear.
      */
     private fun state(): State = when {
+        // The F-Droid check comes first and is a FLAVOR check, never a KeyCheck one: the
+        // F-Droid KeyCheck stub answers true by design, and reading it here would tell
+        // every F-Droid user "Unlocked with the Full Range Key. Thank you." -- gratitude
+        // for a purchase that never happened, on the one surface whose audience checks.
+        BuildConfig.FLAVOR != "play" -> State.FDROID
         Entitlement.isGrandfathered(this) -> State.GRANDFATHERED
         KeyCheck.isKeyInstalled(this) -> State.UNLOCKED
         Entitlement.isTrialActive(this) -> State.TRIAL
@@ -88,6 +93,7 @@ class InfoSheetActivity : AppCompatActivity() {
         }
 
         val headline = when (st) {
+            State.FDROID -> getString(R.string.gv_info_state_fdroid)
             State.GRANDFATHERED -> getString(R.string.gv_info_state_grandfathered)
             State.UNLOCKED -> getString(R.string.gv_info_state_unlocked)
             State.LOCKED -> getString(R.string.gv_info_state_locked)
@@ -99,6 +105,7 @@ class InfoSheetActivity : AppCompatActivity() {
         root.addView(text(headline, 19f, bold = true, colorRes = R.color.gv_text_primary))
 
         val body = when (st) {
+            State.FDROID -> R.string.gv_info_body_fdroid
             State.GRANDFATHERED -> R.string.gv_info_body_grandfathered
             State.UNLOCKED -> R.string.gv_info_body_unlocked
             State.TRIAL -> R.string.gv_info_body_trial
@@ -107,9 +114,11 @@ class InfoSheetActivity : AppCompatActivity() {
         root.addView(text(getString(body), 13f, colorRes = R.color.gv_text_secondary).topPad(8))
 
         // A buyer is offered nothing: they already paid, and a live "buy" button would read
-        // as a second charge. Everyone else gets one honest route to Play, worded as
-        // support for the people who owe us nothing.
-        if (st != State.UNLOCKED) {
+        // as a second charge. F-Droid is offered nothing either: that build has no key and
+        // pointing its users at Google Play would betray the promise the listing makes.
+        // Everyone else gets one honest route to Play, worded as support for the people
+        // who owe us nothing.
+        if (st != State.UNLOCKED && st != State.FDROID) {
             val cta = if (st == State.GRANDFATHERED) R.string.gv_info_cta_support
             else R.string.gv_info_cta_buy
             root.addView(Button(this).apply {
@@ -121,10 +130,21 @@ class InfoSheetActivity : AppCompatActivity() {
             }.topPad(18, fill = true))
         }
 
-        root.addView(
-            text(getString(R.string.gv_info_restore), 12f, colorRes = R.color.gv_text_muted)
-                .topPad(if (st == State.UNLOCKED) 18 else 14)
-        )
+        // The restore note must describe the reader's OWN restore. A grandfathered user
+        // never bought a key, so "install the key again, it is never charged twice" would
+        // be false for them -- their access travels with Android backup instead. F-Droid
+        // has neither key nor backup story worth a line here, so it gets none.
+        when (st) {
+            State.FDROID -> Unit
+            State.GRANDFATHERED -> root.addView(
+                text(getString(R.string.gv_info_restore_grandfathered), 12f, colorRes = R.color.gv_text_muted)
+                    .topPad(14)
+            )
+            else -> root.addView(
+                text(getString(R.string.gv_info_restore), 12f, colorRes = R.color.gv_text_muted)
+                    .topPad(if (st == State.UNLOCKED) 18 else 14)
+            )
+        }
 
         root.addView(legalRow().topPad(18, fill = true))
         return root
