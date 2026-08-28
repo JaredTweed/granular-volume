@@ -52,7 +52,8 @@ class OverlayManager(
     private val audioController: AudioController,
     private val coordinator: FullRangeCoordinator,
     private val scope: CoroutineScope,
-    private val onDismiss: () -> Unit
+    private val onDismiss: () -> Unit,
+    private val onInfo: () -> Unit
 ) {
 
     companion object {
@@ -94,6 +95,17 @@ class OverlayManager(
         // down key and the mute bar is decided by TEST ORDER: chevrons before mute, because
         // the mis-tap option B exists to prevent is a chevron tap landing on mute.
         private const val CHEVRON_SLOP_DP = 9
+
+        /**
+         * Half the close button's slop, and that is the whole design.
+         *
+         * Info sits 6dp below close, so 6dp of upward slop claims exactly the gap and
+         * stops at the close button's own edge: close keeps every pixel it had. Downward
+         * it would reach the up chevron, which is why the chevrons are hit-tested BEFORE
+         * info, leaving their regions untouched too. The net effect is that the info
+         * button only ever claims space that used to be the decorative drag handle.
+         */
+        private const val INFO_SLOP_DP = 6
         private const val MUTE_SLOP_DP = 12
 
         // 1.4.4 press feedback + key-press flash.
@@ -115,6 +127,7 @@ class OverlayManager(
     private val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val density = context.resources.displayMetrics.density
     private val dismissHitSlop = (12 * density).toInt()
+    private val infoHitSlop = (INFO_SLOP_DP * density).toInt()
     private val chevronHitSlop = (CHEVRON_SLOP_DP * density).toInt()
     private val muteHitSlop = (MUTE_SLOP_DP * density).toInt()
     private var overlayView: View? = null
@@ -189,6 +202,7 @@ class OverlayManager(
         val btnUp      = view.findViewById<ImageButton>(R.id.gv_btn_up)
         val btnDown    = view.findViewById<ImageButton>(R.id.gv_btn_down)
         val btnDismiss = view.findViewById<ImageButton>(R.id.gv_btn_dismiss)
+        val btnInfo    = view.findViewById<ImageButton>(R.id.gv_btn_info)
         // 1.4.4: the mute control is a full-width bar (LinearLayout), no longer an ImageButton.
         val btnMute    = view.findViewById<View>(R.id.gv_btn_mute)
 
@@ -199,6 +213,7 @@ class OverlayManager(
         btnUp.isClickable = false
         btnDown.isClickable = false
         btnDismiss.isClickable = false
+        btnInfo.isClickable = false
         btnMute.isClickable = false
 
         // One-time hint next to the line (full-range onboarding spec: this is ALL of it).
@@ -206,7 +221,7 @@ class OverlayManager(
             view.findViewById<TextView>(R.id.gv_line_tooltip).visibility = View.VISIBLE
         }
 
-        setupUnifiedTouch(view, quietBars, btnUp, btnDown, btnDismiss, btnMute)
+        setupUnifiedTouch(view, quietBars, btnUp, btnDown, btnDismiss, btnInfo, btnMute)
         render(view)
     }
 
@@ -249,6 +264,7 @@ class OverlayManager(
         btnUp: View,
         btnDown: View,
         btnDismiss: ImageButton,
+        btnInfo: ImageButton,
         btnMute: View
     ) {
         var initialX = 0
@@ -289,7 +305,7 @@ class OverlayManager(
                         applyLayout()
                         savePosition()
                     } else {
-                        handleTap(root, e.rawX, e.rawY, quietBars, btnUp, btnDown, btnDismiss, btnMute)
+                        handleTap(root, e.rawX, e.rawY, quietBars, btnUp, btnDown, btnDismiss, btnInfo, btnMute)
                     }
                     scheduleIdleFade(root)
                     dragging = false
@@ -314,16 +330,31 @@ class OverlayManager(
         btnUp: View,
         btnDown: View,
         btnDismiss: ImageButton,
+        btnInfo: ImageButton,
         btnMute: View
     ) {
-        if (hit(btnDismiss, rawX, rawY, dismissHitSlop)) {
-            flash(btnDismiss); onDismiss(); return
-        }
+        // ORDER IS THE DESIGN, and it changed once, for one reason.
+        //
+        // The chevrons now come FIRST so that adding the info button could not shave a
+        // pixel off the primary control: volume is what this app is, and its regions are
+        // exactly what they were. Close and the chevrons cannot contest each other at all
+        // any more, because the 26dp info button sits between them, so promoting the
+        // chevrons above close is invisible in behaviour.
+        //
+        // Info then beats close, deliberately. The two share a 12dp band and one of them
+        // has to win it: an accidental sheet is a tap to dismiss, an accidental close
+        // takes the dial away. Same reasoning that already puts chevrons above mute.
         if (hit(btnUp, rawX, rawY, chevronHitSlop)) {
             pressPulse(btnUp); tick(root); stepCombined(+1); return
         }
         if (hit(btnDown, rawX, rawY, chevronHitSlop)) {
             pressPulse(btnDown); tick(root); stepCombined(-1); return
+        }
+        if (hit(btnInfo, rawX, rawY, infoHitSlop)) {
+            flash(btnInfo); onInfo(); return
+        }
+        if (hit(btnDismiss, rawX, rawY, dismissHitSlop)) {
+            flash(btnDismiss); onDismiss(); return
         }
         if (hit(btnMute, rawX, rawY, muteHitSlop)) {
             pressPulse(btnMute); confirmHaptic(root); coordinator.toggleMute(); return

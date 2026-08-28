@@ -26,16 +26,29 @@
         android:scaleType="centerInside"
         android:contentDescription="@string/gv_dismiss" />
 
-    <!-- Drag handle — grab anywhere on the pill to reposition; this is the visual cue.
-         When the pill is collapsed to a bottom tab, the handle + close above stay visible. -->
-    <View
-        android:id="@+id/gv_drag_handle"
+    <!-- Info — the pill's only route to status, purchase and the legal texts, and the
+         reason it lives HERE: the main screen closes itself once set up, so the dial is
+         the single surface a user still sees every day.
+
+         It replaces the old 4dp drag handle, which was decorative only. Dragging is
+         handled on the WHOLE pill (OverlayManager's root touch listener), so the handle
+         taught a specificity that was never true and spent 4dp saying it.
+
+         Same 26dp circle as the close button above it, deliberately: the top of the pill
+         is the meta zone, the things that are not volume, and its two members should read
+         as one family. Everything below this point is untouched. -->
+    <ImageButton
+        android:id="@+id/gv_btn_info"
         android:layout_width="26dp"
-        android:layout_height="4dp"
-        android:background="@drawable/bg_drag_handle"
+        android:layout_height="26dp"
+        android:background="@drawable/bg_overlay_close"
+        android:src="@drawable/ic_info"
+        android:tint="#B3FFFFFF"
+        android:padding="4dp"
+        android:scaleType="centerInside"
         android:layout_marginTop="6dp"
         android:layout_marginBottom="6dp"
-        android:contentDescription="@string/gv_drag_handle" />
+        android:contentDescription="@string/gv_info" />
 
     <!-- Collapsible body: hidden when the pill is tucked into the bottom tab. -->
     <LinearLayout

@@ -22,6 +22,7 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.granularvolume.MainActivity
 import com.granularvolume.R
+import com.granularvolume.InfoSheetActivity
 import com.granularvolume.PaywallActivity
 import com.granularvolume.audio.AudioController
 import com.granularvolume.util.ProAccess
@@ -203,6 +204,9 @@ class VolumeControlService : Service() {
         coordinator = FullRangeCoordinator(applicationContext, audioController, streamVolumeController)
         coordinator.lockedProvider = { !unlockedThisSession() }
         coordinator.onLockedInteraction = { mainHandler.post { openPaywall() } }
+        // The dial is the only surface a set-up user still sees, so it carries the one
+        // route to status, purchase and the legal texts. NEW_TASK because the caller is a
+        // service, exactly as with the paywall sheet.
         overlayManager  = OverlayManager(
             context         = applicationContext,
             audioController = audioController,
@@ -211,11 +215,23 @@ class VolumeControlService : Service() {
             onDismiss       = {
                 stopRequestedByUser = true
                 stopSelf()
+            },
+            onInfo          = {
+                startActivity(
+                    Intent(applicationContext, InfoSheetActivity::class.java)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
             }
         )
 
         serviceScope.launch(Dispatchers.Default) {
             audioController.initialize()
+            // initialize() re-applies the persisted level THROUGH the gate, so a locked
+            // device with a stale deep level is now at 0 dB while the coordinator still
+            // believes it is in the quiet zone (it read the pre-clamp value when it was
+            // constructed). Without this the dial would open showing a step it is not
+            // applying, on every single start.
+            coordinator.syncZoneToAppliedGain()
             if (!audioController.isEffectAvailable) {
                 Log.e(tag, "No audio effect available — service will run without audio attenuation")
             }
@@ -311,7 +327,7 @@ class VolumeControlService : Service() {
                 if (i == steps) {
                     audioController.previewBypass = false
                     audioController.setAttenuation(to, AudioController.GainSource.SYSTEM)
-                    coordinator.onPreviewRevertedToFloor()
+                    coordinator.syncZoneToAppliedGain()
                 } else {
                     audioController.setAttenuation(
                         from + distanceDb * i / steps, AudioController.GainSource.SYSTEM

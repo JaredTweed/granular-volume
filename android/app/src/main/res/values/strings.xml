@@ -17,7 +17,6 @@
 
     <!-- Overlay -->
     <string name="gv_dismiss">Close volume control</string>
-    <string name="gv_drag_handle">Drag to reposition</string>
     <string name="gv_louder">Louder, reduce attenuation</string>
     <string name="gv_quieter">Quieter, increase attenuation</string>
     <string name="gv_mute">Mute media</string>
@@ -52,6 +51,22 @@
     <string name="gv_paywall_not_now">Not now</string>
     <string name="gv_paywall_terms">By upgrading, you agree to our Terms of Use</string>
     <string name="gv_paywall_unlocked">Full range unlocked. Enjoy the quiet.</string>
+
+    <!-- Info sheet, opened from the dial's info button (1.5.0) -->
+    <string name="gv_info">About this app and your access. Drag anywhere on the control to move it.</string>
+    <string name="gv_info_title">Your access</string>
+    <string name="gv_info_state_grandfathered">Every step is yours, free, always</string>
+    <string name="gv_info_state_unlocked">Unlocked with the Full Range Key</string>
+    <string name="gv_info_state_locked">The dial is locked</string>
+    <string name="gv_info_body_grandfathered">You were here before the paid unlock existed, so nothing was taken and nothing will be. If the app matters to you, buying the key is a way to support it.</string>
+    <string name="gv_info_body_trial">Everything is open while you try it. When the week is up, keeping the control takes one payment, once, on this account. Nothing renews and nothing is charged on its own.</string>
+    <string name="gv_info_body_unlocked">Thank you. Every step, the whole range and mute stay open on this account for good.</string>
+    <string name="gv_info_body_locked">One payment, once, brings every step back exactly where you left it. Nothing renews and there is no subscription.</string>
+    <string name="gv_info_cta_buy">Get Full Range Key on Google Play</string>
+    <string name="gv_info_cta_support">Support this app on Google Play</string>
+    <string name="gv_info_restore">New phone or a reinstall? Install the key again from Google Play with the same account. It is never charged twice, and that is the whole restore.</string>
+    <string name="gv_info_terms">Terms of Use</string>
+    <string name="gv_info_privacy">Privacy Policy</string>
 
     <!-- Trial (1.5.0) -->
     <plurals name="gv_trial_days_left">

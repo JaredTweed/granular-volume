@@ -341,15 +341,25 @@ class FullRangeCoordinator(
     // ────────────────────────────────────────────────────────────────
 
     /**
-     * The locked-floor preview ramp just finished at 0 dB. A quiet zone holding zero gain
-     * is an EMPTY quiet zone: the truthful description of "hardware at the floor, no gain"
-     * is the upper zone's bottom rung, and leaving zoneQuiet set here made the dial render
-     * a -5 dB step that does not exist (dbToStep clamps 0 to the top visible quiet bar).
-     * Before the trial model this state could not stand, because the ramp returned to a
-     * real -5 dB step; under the locked floor it stands until the next tap, so it has to
-     * be exited explicitly.
+     * Put the displayed zone back in agreement with the gain that is actually applied.
+     *
+     * A quiet zone holding zero gain is an EMPTY quiet zone. The truthful description of
+     * "hardware at the floor, no gain" is the upper zone's bottom rung, and leaving
+     * zoneQuiet set makes the dial render a -5 dB step that is not applied, because
+     * dbToStep clamps 0 to the top visible quiet bar. The audio is correct either way;
+     * it is the readout that lies, which is worse in the locked state than anywhere else,
+     * since that is the screen where we ask for money.
+     *
+     * Two callers, both moments where the GATE moved the gain without the user touching
+     * anything, so nothing else would have corrected the zone:
+     *  - service start, after initialize() re-applies the persisted level through the gate
+     *    (a locked device with a stale deep level lands here on EVERY start)
+     *  - the end of the preview ramp, which returns to the locked floor
+     *
+     * Before the trial model neither case could arise: the floor was a real -5 dB step,
+     * so a clamped level was always a legitimate quiet-zone position.
      */
-    fun onPreviewRevertedToFloor() {
+    fun syncZoneToAppliedGain() {
         if (audioController.attenuationDb.value >= 0f && zoneQuiet) {
             zoneQuiet = false
             notifyUi()
