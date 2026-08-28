@@ -311,6 +311,7 @@ class VolumeControlService : Service() {
                 if (i == steps) {
                     audioController.previewBypass = false
                     audioController.setAttenuation(to, AudioController.GainSource.SYSTEM)
+                    coordinator.onPreviewRevertedToFloor()
                 } else {
                     audioController.setAttenuation(
                         from + distanceDb * i / steps, AudioController.GainSource.SYSTEM

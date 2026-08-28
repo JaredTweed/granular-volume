@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.granularvolume.service.VolumeControlService
+import com.granularvolume.util.Prefs
 import com.granularvolume.util.ProAccess
 
 /**
@@ -100,7 +101,13 @@ class PaywallActivity : AppCompatActivity() {
 
         root.addView(text(R.string.gv_paywall_title, 19f, bold = true, colorRes = R.color.gv_text_primary))
         root.addView(text(R.string.gv_paywall_depth, 14f, colorRes = R.color.gv_text_secondary).topPad(6))
-        root.addView(text(R.string.gv_paywall_preview_note, 13f, colorRes = R.color.gv_success).topPad(12))
+        // The preview note is a factual statement ("you are hearing this step right now"), so it
+        // may only appear when a preview is actually playing. The quiet-step path sets the
+        // preview pref before opening this sheet; the upper-zone and mute paths do not run a
+        // preview, and showing the line there would be the sheet's first sentence being false.
+        if (Prefs.getPreviewStepDb(this) != null) {
+            root.addView(text(R.string.gv_paywall_preview_note, 13f, colorRes = R.color.gv_success).topPad(12))
+        }
         root.addView(text(R.string.gv_paywall_body, 13f, colorRes = R.color.gv_text_secondary).topPad(12))
         root.addView(text(R.string.gv_paywall_expectation, 12f, colorRes = R.color.gv_text_muted).topPad(8))
 

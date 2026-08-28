@@ -44,7 +44,7 @@
 
     <!-- Full-range paywall (1.5.0) -->
     <string name="gv_paywall_title">Your seven days are over</string>
-    <string name="gv_paywall_depth">Seven steps, down to −30 dB below the system minimum, plus volume control when the buttons are broken.</string>
+    <string name="gv_paywall_depth">Every quiet step down to −30 dB, the whole normal range, and mute. One key, once, opens all of it.</string>
     <string name="gv_paywall_body">One-time purchase, yours for good on this account. No subscription. The app stays free of ads, tracking and internet access.</string>
     <string name="gv_paywall_preview_note">You are hearing this step right now. The preview runs for 30 seconds, then the dial eases back. Tap any locked step to hear it again.</string>
     <string name="gv_paywall_expectation">Google Play will open on a small companion app, Full Range Key. Buying and installing it is the whole unlock, and these steps open here straight away.</string>
@@ -58,7 +58,7 @@
         <item quantity="one">One day left of full access</item>
         <item quantity="other">%d days left of full access</item>
     </plurals>
-    <string name="gv_trial_body">Every step is open while you try it. When the week is up, keeping the range costs a single payment, once, on this account. Nothing renews and nothing is charged on its own.</string>
+    <string name="gv_trial_body">Every step is open while you try it. When the week is up, keeping the control costs a single payment, once, on this account. Nothing renews and nothing is charged on its own.</string>
     <string name="gv_trial_cta">See the key on Google Play</string>
     <string name="gv_trial_dismiss">Later</string>
     <string name="gv_trial_over_title">Your seven days are over</string>

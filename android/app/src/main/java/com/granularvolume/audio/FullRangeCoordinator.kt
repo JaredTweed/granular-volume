@@ -340,6 +340,22 @@ class FullRangeCoordinator(
     // Mute (media stream only — alarms survive by design)
     // ────────────────────────────────────────────────────────────────
 
+    /**
+     * The locked-floor preview ramp just finished at 0 dB. A quiet zone holding zero gain
+     * is an EMPTY quiet zone: the truthful description of "hardware at the floor, no gain"
+     * is the upper zone's bottom rung, and leaving zoneQuiet set here made the dial render
+     * a -5 dB step that does not exist (dbToStep clamps 0 to the top visible quiet bar).
+     * Before the trial model this state could not stand, because the ramp returned to a
+     * real -5 dB step; under the locked floor it stands until the next tap, so it has to
+     * be exited explicitly.
+     */
+    fun onPreviewRevertedToFloor() {
+        if (audioController.attenuationDb.value >= 0f && zoneQuiet) {
+            zoneQuiet = false
+            notifyUi()
+        }
+    }
+
     fun toggleMute() {
         // Unmuting is always allowed: a locked device must never be left stuck at silence.
         if (!isMuted && lockedProvider()) { onLockedInteraction?.invoke(); return }

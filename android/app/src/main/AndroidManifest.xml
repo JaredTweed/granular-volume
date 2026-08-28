@@ -55,6 +55,7 @@
         <activity
             android:name=".PaywallActivity"
             android:exported="false"
+            android:launchMode="singleTop"
             android:excludeFromRecents="true"
             android:theme="@style/Theme.GranularVolume.Paywall" />
 
