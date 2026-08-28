@@ -5,14 +5,19 @@ import android.content.Context
 /**
  * Single source of truth for "does this device have the full quiet range".
  *
- * Two independent ways in, either one is enough:
+ * Three independent ways in, any one is enough:
  *
  *  1. **Grandfathered** — the device used the app before the gated version arrived.
  *     Decided ONCE, on the first run of the gated version, from prior-use traces in
- *     prefs ([Prefs.hasAnyPriorUse]), then stored sticky. Existing users keep the
- *     full range forever; the promise that made them install is never withdrawn.
+ *     prefs ([Prefs.hasAnyPriorUse]), then stored sticky in [Entitlement]. Existing
+ *     users keep the full range forever; the promise that made them install is never
+ *     withdrawn.
  *
- *  2. **Key installed** — the paid unlock-key app is present and its signing
+ *  2. **Trial** — every new install gets [Entitlement.TRIAL_DAYS] days of the complete
+ *     app, gate included, so the decision to buy is made after living with the thing
+ *     rather than after reading a description of it.
+ *
+ *  3. **Key installed** — the paid unlock-key app is present and its signing
  *     certificate matches the pinned set ([KeyCheck], flavor-split: the F-Droid
  *     flavor is fully unlocked by a stub, keeping that build free and complete).
  *
@@ -26,17 +31,47 @@ object ProAccess {
      * (service create, MainActivity create) — whichever runs first decides, the
      * rest are no-ops. Never call after writing new prefs in the same session,
      * or a fresh install could look like prior use.
+     *
+     * Also carries the verdict over from the old single-prefs-file layout, so an
+     * install that was already grandfathered before the split keeps its status.
      */
     fun evaluateGrandfather(context: Context) {
-        if (Prefs.wasGrandfatherEvaluated(context)) return
-        Prefs.setGrandfathered(context, Prefs.hasAnyPriorUse(context))
-        Prefs.setGrandfatherEvaluated(context)
+        Entitlement.migrateFromLegacyPrefsIfNeeded(
+            context,
+            legacyEvaluated = Prefs.wasGrandfatherEvaluated(context),
+            legacyGrandfathered = Prefs.isGrandfathered(context),
+        )
+        if (Entitlement.wasGrandfatherEvaluated(context)) return
+        Entitlement.setGrandfathered(context, Prefs.hasAnyPriorUse(context))
+        Entitlement.setGrandfatherEvaluated(context)
     }
 
     /**
-     * Live answer, cheap enough to call on every gate decision: one prefs read
-     * short-circuits before the PackageManager lookup for grandfathered users.
+     * Live answer, cheap enough to call on every gate decision: two prefs reads
+     * short-circuit before the PackageManager lookup.
+     *
+     * Order matters only for cost, not correctness. Grandfather first because it is a
+     * single boolean; trial second because it is arithmetic on two longs; the key check
+     * last because it is the only one that touches the package manager.
      */
     fun isPro(context: Context): Boolean =
-        Prefs.isGrandfathered(context) || KeyCheck.isKeyInstalled(context)
+        Entitlement.isGrandfathered(context) ||
+            Entitlement.isTrialActive(context) ||
+            KeyCheck.isKeyInstalled(context)
+
+    /**
+     * True when the ONLY reason the range is open is the trial still running.
+     * Used to decide whether to show the countdown; a grandfathered user or a buyer
+     * must never be told about a trial that does not apply to them.
+     */
+    fun isOnTrial(context: Context): Boolean =
+        !Entitlement.isGrandfathered(context) &&
+            !KeyCheck.isKeyInstalled(context) &&
+            Entitlement.isTrialActive(context)
+
+    /** True once a trial has run out and nothing else has opened the range. */
+    fun isTrialExpired(context: Context): Boolean =
+        !Entitlement.isGrandfathered(context) &&
+            !KeyCheck.isKeyInstalled(context) &&
+            !Entitlement.isTrialActive(context)
 }

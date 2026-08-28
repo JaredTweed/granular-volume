@@ -20,6 +20,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.granularvolume.service.GranularVolumeTileService
 import com.granularvolume.service.VolumeControlService
+import com.granularvolume.util.Entitlement
+import com.granularvolume.util.KeyCheck
 import com.granularvolume.util.PermissionHelper
 import com.granularvolume.util.ProAccess
 import com.granularvolume.util.Prefs
@@ -72,8 +74,17 @@ class MainActivity : AppCompatActivity() {
          * A bump costs one screen on the next launch and does not touch a running service, so
          * the people most likely to interact, and to buy, will have actively accepted the text
          * that governs them.
+         *
+         * Version 3, bumped for the trial model. Section 5 previously promised a free tier
+         * "at no charge, permanently". That promise is gone for new installs, replaced by
+         * [Entitlement.TRIAL_DAYS] days of the complete app. Nobody may be moved onto those
+         * terms without being shown them, and existing users are grandfathered in code, not
+         * merely in copy, so what they re-accept still describes what they have.
          */
-        const val TERMS_VERSION = 2
+        const val TERMS_VERSION = 3
+
+        /** The countdown card starts appearing this many days before the trial ends. */
+        private const val TRIAL_CARD_FROM_DAYS = 3
 
         private const val URL_TERMS = "https://rzuss.github.io/granular-volume-privacy/terms-of-use.html"
         private const val URL_PRIVACY = "https://rzuss.github.io/granular-volume-privacy/"
@@ -137,10 +148,15 @@ class MainActivity : AppCompatActivity() {
     private fun setupTipjarCard(): Boolean {
         val card = findViewById<View>(R.id.gv_tipjar_card)
 
-        // A buyer and a grandfathered user are mutually exclusive, so one card slot serves
-        // both. The purchase confirmation takes priority: it is the one a person paid for.
-        if (BuildConfig.FLAVOR == "play" && !Prefs.isGrandfathered(this) &&
-            !Prefs.wasUnlockAcknowledged(this) && ProAccess.isPro(this)
+        // A buyer, a grandfathered user and someone on the trial are mutually exclusive, so
+        // one card slot serves all three. The purchase confirmation takes priority: it is
+        // the one a person paid for.
+        //
+        // The condition is the KEY, never [ProAccess.isPro] — that is also true during the
+        // trial, and thanking someone for a purchase they have not made is the fastest way
+        // to lose the sale that was still coming.
+        if (BuildConfig.FLAVOR == "play" && !Entitlement.isGrandfathered(this) &&
+            !Prefs.wasUnlockAcknowledged(this) && KeyCheck.isKeyInstalled(this)
         ) {
             card.visibility = View.VISIBLE
             findViewById<TextView>(R.id.tv_card_title).setText(R.string.gv_unlocked_title)
@@ -157,18 +173,76 @@ class MainActivity : AppCompatActivity() {
         }
 
         val show = BuildConfig.FLAVOR == "play" &&
-            Prefs.isGrandfathered(this) && !Prefs.wasTipjarCardShown(this)
-        card.visibility = if (show) View.VISIBLE else View.GONE
-        if (!show) return false
-        findViewById<TextView>(R.id.btn_tipjar_dismiss).setOnClickListener {
-            Prefs.setTipjarCardShown(this)
-            card.visibility = View.GONE
+            Entitlement.isGrandfathered(this) && !Prefs.wasTipjarCardShown(this)
+        if (show) {
+            card.visibility = View.VISIBLE
+            findViewById<TextView>(R.id.btn_tipjar_dismiss).setOnClickListener {
+                Prefs.setTipjarCardShown(this)
+                card.visibility = View.GONE
+            }
+            findViewById<TextView>(R.id.btn_tipjar_support).setOnClickListener {
+                Prefs.setTipjarCardShown(this)
+                card.visibility = View.GONE
+                openUrl("market://details?id=com.granularvolume.key")
+            }
+            return true
         }
-        findViewById<TextView>(R.id.btn_tipjar_support).setOnClickListener {
-            Prefs.setTipjarCardShown(this)
-            card.visibility = View.GONE
-            openUrl("market://details?id=com.granularvolume.key")
+
+        return setupTrialCard(card)
+    }
+
+    /**
+     * The trial's own card, in the same slot. Two states, and the honest thing in both is to
+     * say where the person stands before they discover it by tapping something that no longer
+     * works.
+     *
+     *  RUNNING — shown in the last [TRIAL_CARD_FROM_DAYS] days only, once per day. Earlier
+     *  than that it is a countdown nobody asked for on an app they are still deciding about.
+     *
+     *  OVER — shown every launch, with no dismiss. The app genuinely does nothing at this
+     *  point, so a screen that quietly returned to the dial would read as a broken app rather
+     *  than a finished trial.
+     *
+     * @return true while the card holds the auto-launch-and-finish fast path open.
+     */
+    private fun setupTrialCard(card: View): Boolean {
+        if (BuildConfig.FLAVOR != "play") { card.visibility = View.GONE; return false }
+
+        val title   = findViewById<TextView>(R.id.tv_card_title)
+        val body    = findViewById<TextView>(R.id.tv_card_body)
+        val support = findViewById<TextView>(R.id.btn_tipjar_support)
+        val dismiss = findViewById<TextView>(R.id.btn_tipjar_dismiss)
+
+        // Both questions are asked through ProAccess, which excludes a grandfathered user and
+        // a buyer by construction. Asking Entitlement directly would tell a grandfathered
+        // user their trial is over, which is both false and alarming.
+        if (ProAccess.isOnTrial(this)) {
+            val daysLeft = Entitlement.daysLeftInTrial(this)
+            if (daysLeft > TRIAL_CARD_FROM_DAYS || Prefs.getTrialCardShownForDay(this) == daysLeft) {
+                card.visibility = View.GONE
+                return false
+            }
+            Prefs.setTrialCardShownForDay(this, daysLeft)
+            card.visibility = View.VISIBLE
+            title.text = resources.getQuantityString(R.plurals.gv_trial_days_left, daysLeft, daysLeft)
+            body.setText(R.string.gv_trial_body)
+            support.visibility = View.VISIBLE
+            support.setText(R.string.gv_trial_cta)
+            support.setOnClickListener { openUrl("market://details?id=com.granularvolume.key") }
+            dismiss.setText(R.string.gv_trial_dismiss)
+            dismiss.setOnClickListener { card.visibility = View.GONE }
+            return true
         }
+
+        if (!ProAccess.isTrialExpired(this)) { card.visibility = View.GONE; return false }
+
+        card.visibility = View.VISIBLE
+        title.setText(R.string.gv_trial_over_title)
+        body.setText(R.string.gv_trial_over_body)
+        support.visibility = View.VISIBLE
+        support.setText(R.string.gv_trial_cta)
+        support.setOnClickListener { openUrl("market://details?id=com.granularvolume.key") }
+        dismiss.visibility = View.GONE
         return true
     }
 

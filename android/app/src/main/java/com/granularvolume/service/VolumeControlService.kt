@@ -89,6 +89,9 @@ class VolumeControlService : Service() {
     private lateinit var audioController: AudioController
     private lateinit var streamVolumeController: StreamVolumeController
     private lateinit var coordinator: FullRangeCoordinator
+
+    /** Latched full-range verdict for this session. See [unlockedThisSession]. */
+    private var sessionUnlocked = false
     private lateinit var overlayManager: OverlayManager
 
     /**
@@ -176,11 +179,12 @@ class VolumeControlService : Service() {
 
         audioController = AudioController(applicationContext)
 
-        // Full-range gate (1.5.0): decide grandfathering once, then let the
-        // controller ask live on every gain decision. Must precede initialize(),
-        // which routes the boot-restore level through the gate.
+        // Full-range gate (1.5.0): decide grandfathering once, then latch the verdict for
+        // this session. Must precede initialize(), which routes the boot-restore level
+        // through the gate.
         ProAccess.evaluateGrandfather(applicationContext)
-        audioController.proProvider = { ProAccess.isPro(applicationContext) }
+        sessionUnlocked = ProAccess.isPro(applicationContext)
+        audioController.proProvider = ::unlockedThisSession
 
         // A locked quiet step was tapped: apply it FOR REAL as a live preview
         // (the strongest honest sales pitch is the silence itself), remember it
@@ -192,14 +196,13 @@ class VolumeControlService : Service() {
                 Prefs.setPreviewStepDb(applicationContext, requestedDb)
                 mainHandler.removeCallbacks(previewTimeout)
                 mainHandler.postDelayed(previewTimeout, PREVIEW_TIMEOUT_MS)
-                startActivity(
-                    Intent(applicationContext, PaywallActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
+                openPaywall()
             }
         }
         streamVolumeController = StreamVolumeController(applicationContext)
         coordinator = FullRangeCoordinator(applicationContext, audioController, streamVolumeController)
+        coordinator.lockedProvider = { !unlockedThisSession() }
+        coordinator.onLockedInteraction = { mainHandler.post { openPaywall() } }
         overlayManager  = OverlayManager(
             context         = applicationContext,
             audioController = audioController,
@@ -264,13 +267,38 @@ class VolumeControlService : Service() {
         return START_STICKY
     }
 
-    /** Paywall dismissed without buying: ramp back up to the free floor, no hard jump. */
+    /**
+     * Whether the full range is open for THIS session.
+     *
+     * Latched, and it only ever opens: the snapshot is taken at service start, and after
+     * that the only thing that can change the answer is the key arriving, which must take
+     * effect at once. A trial that runs out while the control is live is deliberately
+     * ignored until the next start. Nothing may get louder on its own while someone is on a
+     * call at -30 dB, and finding the app dead the next time you start it is a far kinder
+     * failure than the phone shouting mid-sentence.
+     */
+    private fun unlockedThisSession(): Boolean {
+        if (sessionUnlocked) return true
+        if (!ProAccess.isPro(applicationContext)) return false
+        sessionUnlocked = true
+        Log.i(tag, "Full range opened mid-session (key installed)")
+        return true
+    }
+
+    private fun openPaywall() {
+        startActivity(
+            Intent(applicationContext, PaywallActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
+    /** Paywall dismissed without buying: ramp back up to the locked floor, no hard jump. */
     private fun endPreview() {
         if (!audioController.previewBypass) return
         mainHandler.removeCallbacks(previewTimeout)
         Prefs.clearPreviewStepDb(applicationContext)
         val from = audioController.attenuationDb.value
-        val to = -5f
+        val to = audioController.lockedFloorDb
         if (from >= to) { audioController.previewBypass = false; return }
 
         val distanceDb = to - from                                   // always positive here

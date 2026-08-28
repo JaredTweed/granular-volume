@@ -18,8 +18,15 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class AudioController(private val context: Context) {
 
-    /** Deepest step available without Pro: 0 and −5 dB stay free, −10 and below unlock. */
-    private val FREE_FLOOR_DB = -5f
+    /**
+     * Where a locked device is held: 0 dB, no attenuation at all.
+     *
+     * Under the trial model there is no permanent free tier to fall back to. Every install
+     * gets the complete app for [com.granularvolume.util.Entitlement.TRIAL_DAYS] days, and
+     * after that the range itself is what is being sold. Devices that used the app before
+     * the trial existed are grandfathered and never reach this floor.
+     */
+    val lockedFloorDb = 0f
 
     private val tag = "GranularVolume:AudioCtrl"
 
@@ -99,11 +106,15 @@ class AudioController(private val context: Context) {
     enum class GainSource {
         /** A quiet-zone step the user picked. Gated; the only source that opens the paywall. */
         QUIET_STEP,
-        /** Upper-zone curve remainder. NEVER gated: the upper zone is free by design. */
+        /**
+         * Upper-zone curve remainder. Gated silently: a locked device never reaches the
+         * upper zone either, because [FullRangeCoordinator] refuses that gesture first and
+         * shows the paywall itself. If one arrives anyway, holding it at 0 dB is correct.
+         */
         CURVE_REMAINDER,
         /** Restores and internal writes (boot restore, mute cancel, absorb easing). Gated silently. */
         SYSTEM,
-        /** The mute convenience. Gate-exempt by the locked decision: mute is free. */
+        /** The mute convenience. Gated silently, for the same reason as the remainder. */
         MUTE,
     }
 
@@ -115,8 +126,8 @@ class AudioController(private val context: Context) {
      */
     fun setAttenuation(dB: Float, source: GainSource = GainSource.SYSTEM) {
         val requested = dB.coerceIn(Prefs.ATTENUATION_MIN, Prefs.ATTENUATION_MAX)
-        val clamped = if (gateOpen(source)) requested else {
-            val limited = requested.coerceAtLeast(FREE_FLOOR_DB)
+        val clamped = if (gateOpen()) requested else {
+            val limited = requested.coerceAtLeast(lockedFloorDb)
             if (limited != requested && source == GainSource.QUIET_STEP) {
                 Log.i(tag, "Gate: ${requested}dB requested, held at ${limited}dB")
                 onGateHit?.invoke(requested)
@@ -129,14 +140,12 @@ class AudioController(private val context: Context) {
         Log.d(tag, "Attenuation set to ${clamped}dB (source=$source)")
     }
 
-    private fun gateOpen(source: GainSource): Boolean =
-        previewBypass ||
-        source == GainSource.CURVE_REMAINDER ||
-        source == GainSource.MUTE ||
-        proProvider()
+    private fun gateOpen(): Boolean = previewBypass || proProvider()
 
     /**
-     * Convenience: mute immediately (max attenuation). Gate-exempt: mute is free.
+     * Convenience: mute immediately (max attenuation). Gated like everything else once the
+     * trial is over: mute IS the deepest step, so leaving it open would be the whole product
+     * behind a different button.
      */
     fun mute() = setAttenuation(Prefs.ATTENUATION_MIN, GainSource.MUTE)
 

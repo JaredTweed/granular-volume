@@ -33,7 +33,7 @@ DESIGNED TO STAY OUT OF THE WAY
 Granular Volume does not take over your volume keys: they keep working, and inside the quiet zone the dial folds their presses into its own finer scale. It does not replace your system volume panel and it does not add an equalizer suite you did not ask for. It sits quietly on top as an overlay and changes one thing: the level, from normal volume all the way below your hardware minimum.
 
 PRIVATE, OPEN SOURCE
-Free to install. Volume control across the normal range and the first step below your device minimum are free, permanently. On Google Play the deeper quiet steps are a one-time purchase; this F-Droid build includes every step at no charge. No ads. No tracking. No internet permission, so the app cannot connect to anything. No account, no sign in, no analytics. Open source under the GPL-3.0 license.
+This F-Droid build is free and complete: every step is included, permanently, with nothing withheld and nothing to buy. On Google Play the app comes with a seven-day trial of everything, after which the control needs a one-time purchase. No ads. No tracking. No internet permission, so the app cannot connect to anything. No account, no sign in, no analytics. Open source under the GPL-3.0 license.
 
 PERMISSIONS, EXPLAINED
 - Display over other apps: required to show the floating volume control above your screen

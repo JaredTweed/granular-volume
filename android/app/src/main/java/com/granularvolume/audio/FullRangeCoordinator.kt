@@ -45,6 +45,24 @@ class FullRangeCoordinator(
     private val appContext = context.applicationContext
     private val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+    // ── Post-trial lock ─────────────────────────────────────────────
+    /**
+     * True once the trial has run out with no key and no grandfather status. Wired by the
+     * service, which snapshots it at start so the answer cannot flip mid-session.
+     *
+     * Defaults to unlocked on purpose, matching [AudioController.proProvider]: a forgotten
+     * wiring must fail towards a working app, never towards a paying user losing depth.
+     *
+     * The quiet zone does NOT consult this. It goes through the gain gate in
+     * [AudioController], which answers the same question and additionally runs the live
+     * preview. This flag exists for the two gestures that move hardware volume directly and
+     * would otherwise slip past that gate entirely.
+     */
+    var lockedProvider: () -> Boolean = { false }
+
+    /** A locked device tried to use the upper zone or mute. Opens the paywall, no preview. */
+    var onLockedInteraction: (() -> Unit)? = null
+
     /** Media curve for the current output route; null = fallback to raw indices. */
     @Volatile
     var mediaCurve: VolumeCurve? = null
@@ -284,6 +302,7 @@ class FullRangeCoordinator(
      * except the remainder, cancels mute if active.
      */
     fun applyUpper(pos: Int) {
+        if (lockedProvider()) { onLockedInteraction?.invoke(); return }
         if (isMuted) cancelMute()
         val stream = streamVol.activeStream()
         val curve = mediaCurve
@@ -322,6 +341,8 @@ class FullRangeCoordinator(
     // ────────────────────────────────────────────────────────────────
 
     fun toggleMute() {
+        // Unmuting is always allowed: a locked device must never be left stuck at silence.
+        if (!isMuted && lockedProvider()) { onLockedInteraction?.invoke(); return }
         if (isMuted) cancelMute() else {
             preMuteIndex = streamVol.index(AudioManager.STREAM_MUSIC)
             preMuteAttenuation = audioController.attenuationDb.value

@@ -30,6 +30,7 @@ object Prefs {
     private const val KEY_PREVIEW_STEP_DB        = "preview_step_db"
     private const val KEY_TIPJAR_CARD_SHOWN      = "tipjar_card_shown"
     private const val KEY_UNLOCK_ACKNOWLEDGED    = "unlock_acknowledged"
+    private const val KEY_TRIAL_CARD_DAY         = "trial_card_shown_for_day"
 
     /** Current attenuation in dB (0.0 = none, -30.0 = near-silent) */
     const val ATTENUATION_DEFAULT = 0f
@@ -181,6 +182,22 @@ object Prefs {
 
     fun setTipjarCardShown(context: Context) {
         prefs(context).edit { putBoolean(KEY_TIPJAR_CARD_SHOWN, true) }
+    }
+
+    /**
+     * Which "days left" value the trial card was last shown for, so the countdown appears
+     * once a day rather than on every launch. Deliberately keyed on the number and not on a
+     * date: the number is what the card says, so it is exactly what must not repeat. -1 means
+     * never shown.
+     *
+     * Lives here, in the settings file, and is therefore NOT part of the backup set. A
+     * restored device re-showing one countdown card is the right side of that trade.
+     */
+    fun getTrialCardShownForDay(context: Context): Int =
+        prefs(context).getInt(KEY_TRIAL_CARD_DAY, -1)
+
+    fun setTrialCardShownForDay(context: Context, daysLeft: Int) {
+        prefs(context).edit { putInt(KEY_TRIAL_CARD_DAY, daysLeft) }
     }
 
     /**

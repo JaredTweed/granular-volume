@@ -43,15 +43,26 @@
     <string name="gv_step_label_30db">Volume step: −30 dB (quietest)</string>
 
     <!-- Full-range paywall (1.5.0) -->
-    <string name="gv_paywall_title">Unlock the full quiet range</string>
-    <string name="gv_paywall_depth">Seven steps, down to −30 dB below the system minimum.</string>
-    <string name="gv_paywall_body">One-time purchase. No subscription. The app stays free of ads, tracking and internet access.</string>
-    <string name="gv_paywall_preview_note">You are hearing this step right now. The preview runs for 30 seconds, then the dial eases back to the free level. Tap any locked step to hear it again.</string>
+    <string name="gv_paywall_title">Your seven days are over</string>
+    <string name="gv_paywall_depth">Seven steps, down to −30 dB below the system minimum, plus volume control when the buttons are broken.</string>
+    <string name="gv_paywall_body">One-time purchase, yours for good on this account. No subscription. The app stays free of ads, tracking and internet access.</string>
+    <string name="gv_paywall_preview_note">You are hearing this step right now. The preview runs for 30 seconds, then the dial eases back. Tap any locked step to hear it again.</string>
     <string name="gv_paywall_expectation">Google Play will open on a small companion app, Full Range Key. Buying and installing it is the whole unlock, and these steps open here straight away.</string>
     <string name="gv_paywall_cta">Get Full Range Key on Google Play</string>
     <string name="gv_paywall_not_now">Not now</string>
     <string name="gv_paywall_terms">By upgrading, you agree to our Terms of Use</string>
     <string name="gv_paywall_unlocked">Full range unlocked. Enjoy the quiet.</string>
+
+    <!-- Trial (1.5.0) -->
+    <plurals name="gv_trial_days_left">
+        <item quantity="one">One day left of full access</item>
+        <item quantity="other">%d days left of full access</item>
+    </plurals>
+    <string name="gv_trial_body">Every step is open while you try it. When the week is up, keeping the range costs a single payment, once, on this account. Nothing renews and nothing is charged on its own.</string>
+    <string name="gv_trial_cta">See the key on Google Play</string>
+    <string name="gv_trial_dismiss">Later</string>
+    <string name="gv_trial_over_title">Your seven days are over</string>
+    <string name="gv_trial_over_body">The dial is locked until the key is installed. One payment, once, and every step comes back exactly where you left it. If it did not turn out to be for you, uninstalling costs nothing and takes nothing with it.</string>
 
     <!-- Grandfather tip-jar card (1.5.0) -->
     <string name="gv_tipjar_title">You have the full range, free, always</string>
