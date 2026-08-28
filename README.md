@@ -183,7 +183,7 @@ The underlying mechanism is identical. Tablets often have a louder minimum step 
 Not currently. The app is free and open source under GPL-3.0.
 
 **Why is there a Play flavor and an F-Droid flavor?**
-F-Droid requires that everything in its build be free and open source, including build dependencies. The `play` flavor includes Google's proprietary in-app review library (only used to occasionally ask for a Play Store rating); the `fdroid` flavor has zero Google Play code and is otherwise functionally identical. See [`build.gradle.kts`](android/app/build.gradle.kts) for the exact flavor split.
+F-Droid requires that everything in its build be free and open source, including build dependencies. The `play` flavor includes Google's proprietary in-app review library (only used to occasionally ask for a Play Store rating); the `fdroid` flavor has zero Google Play code. The two differ in one other way that is deliberate rather than technical: the Play build comes with a seven-day trial and then needs a one-time unlock, while **the F-Droid build is free and complete, permanently**, with every step included and nothing to buy. Its `KeyCheck` stub simply answers true. See [`build.gradle.kts`](android/app/build.gradle.kts) for the exact flavor split.
 
 **Why not just make Android's default minimum volume lower?**
 That's not something a regular app can change. The per-step volume curve is defined by the device manufacturer at the OS/firmware level, not exposed to third-party apps through any public API. Adding attenuation on top, outside the standard volume steps entirely, is the practical mechanism available to an app that isn't the device's own system software. Re-encoding a file to be quieter also works, but only per file and never for streaming.
