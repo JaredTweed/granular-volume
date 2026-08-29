@@ -57,24 +57,12 @@ class VolumeControlService : Service() {
         private const val NOTIFICATION_ID = 1001
         const val ACTION_STOP = "com.granularvolume.ACTION_STOP"
 
-        // Full-range paywall preview (1.5.0). END: revert to the free floor with a
-        // short ramp. COMMIT: the key arrived while previewing — keep the depth.
-        const val ACTION_PREVIEW_END = "com.granularvolume.ACTION_PREVIEW_END"
-        const val ACTION_PREVIEW_COMMIT = "com.granularvolume.ACTION_PREVIEW_COMMIT"
-        /** How long a previewed step keeps playing before the dial returns to the free floor. */
-        private const val PREVIEW_TIMEOUT_MS = 30_000L
-
         /**
-         * The return ramp is timed by HOW FAR it has to travel, not by a fixed duration.
-         *
-         * A preview of -10 rises 5 dB when it ends, which is nothing. A preview of -30 rises
-         * **25 dB**, and doing that in 300 ms while music is playing is a sudden loudness event
-         * of exactly the kind this app exists to prevent, in front of an audience that includes
-         * people with hearing sensitivity. So: a floor for short hops, plus time per dB.
+         * The key app just appeared. Sent by the paywall sheet when it returns from the
+         * store and finds the key installed, so ownership takes effect in that second
+         * rather than at the next service start.
          */
-        private const val RAMP_BASE_MS = 220L
-        private const val RAMP_MS_PER_DB = 42L
-        private const val RAMP_TICK_MS = 60L
+        const val ACTION_KEY_INSTALLED = "com.granularvolume.ACTION_KEY_INSTALLED"
 
         // Hidden-but-stable system broadcast + extras (no public constants exist for these).
         private const val VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION"
@@ -92,6 +80,13 @@ class VolumeControlService : Service() {
     private lateinit var coordinator: FullRangeCoordinator
 
     /** Latched full-range verdict for this session. See [unlockedThisSession]. */
+    /**
+     * The quiet step a locked user reached for, kept only until the store round trip
+     * ends. In memory on purpose: the foreground service outlives the trip, and this
+     * must never outlive it, survive a restart, or travel in a backup.
+     */
+    private var pendingQuietStepDb: Float? = null
+
     private var sessionUnlocked = false
     private lateinit var overlayManager: OverlayManager
 
@@ -187,23 +182,18 @@ class VolumeControlService : Service() {
         sessionUnlocked = ProAccess.isPro(applicationContext)
         audioController.proProvider = ::unlockedThisSession
 
-        // A locked quiet step was tapped: apply it FOR REAL as a live preview
-        // (the strongest honest sales pitch is the silence itself), remember it
-        // for the return-from-store moment, and open the paywall sheet on top.
-        audioController.onGateHit = { requestedDb ->
-            mainHandler.post {
-                audioController.previewBypass = true
-                audioController.setAttenuation(requestedDb, AudioController.GainSource.QUIET_STEP)
-                Prefs.setPreviewStepDb(applicationContext, requestedDb)
-                mainHandler.removeCallbacks(previewTimeout)
-                mainHandler.postDelayed(previewTimeout, PREVIEW_TIMEOUT_MS)
-                openPaywall()
-            }
-        }
         streamVolumeController = StreamVolumeController(applicationContext)
         coordinator = FullRangeCoordinator(applicationContext, audioController, streamVolumeController)
         coordinator.lockedProvider = { !unlockedThisSession() }
-        coordinator.onLockedInteraction = { mainHandler.post { openPaywall() } }
+        coordinator.onLockedInteraction = { pendingStep ->
+            mainHandler.post {
+                pendingQuietStepDb = pendingStep
+                // Observable refusal: this is now the ONLY way a user gesture reaches the
+                // paywall, so the harness asserts on it instead of on the gate's clamp.
+                Log.i(tag, "Locked gesture refused (pendingQuietStep=$pendingStep), opening paywall")
+                openPaywall()
+            }
+        }
         // The dial is the only surface a set-up user still sees, so it carries the one
         // route to status, purchase and the legal texts. NEW_TASK because the caller is a
         // service, exactly as with the paywall sheet.
@@ -261,7 +251,6 @@ class VolumeControlService : Service() {
             Log.e(tag, "Failed to show overlay: ${e.message}", e)
             toast("Couldn't show the control: ${e.message}. Check 'Display over other apps'.")
         }
-        Prefs.clearPreviewStepDb(applicationContext)
         Prefs.setServiceWasRunning(applicationContext, true)
 
         // Update notification when attenuation changes
@@ -277,8 +266,7 @@ class VolumeControlService : Service() {
                 stopRequestedByUser = true
                 stopSelf()
             }
-            ACTION_PREVIEW_END -> endPreview()
-            ACTION_PREVIEW_COMMIT -> commitPreview()
+            ACTION_KEY_INSTALLED -> onKeyInstalled()
         }
         return START_STICKY
     }
@@ -308,46 +296,35 @@ class VolumeControlService : Service() {
         )
     }
 
-    /** Paywall dismissed without buying: ramp back up to the locked floor, no hard jump. */
-    private fun endPreview() {
-        if (!audioController.previewBypass) return
-        mainHandler.removeCallbacks(previewTimeout)
-        Prefs.clearPreviewStepDb(applicationContext)
-        val from = audioController.attenuationDb.value
-        val to = audioController.lockedFloorDb
-        if (from >= to) { audioController.previewBypass = false; return }
-
-        val distanceDb = to - from                                   // always positive here
-        val duration = RAMP_BASE_MS + (distanceDb * RAMP_MS_PER_DB).toLong()
-        val steps = (duration / RAMP_TICK_MS).toInt().coerceAtLeast(3)
-        Log.i(tag, "Preview ending: ${from}dB -> ${to}dB over ${duration}ms in $steps steps")
-
-        for (i in 1..steps) {
-            mainHandler.postDelayed({
-                if (i == steps) {
-                    audioController.previewBypass = false
-                    audioController.setAttenuation(to, AudioController.GainSource.SYSTEM)
-                    coordinator.syncZoneToAppliedGain()
-                } else {
-                    audioController.setAttenuation(
-                        from + distanceDb * i / steps, AudioController.GainSource.SYSTEM
-                    )
-                }
-            }, duration * i / steps)
+    /**
+     * The key has arrived. Opens the latch for this session, then honours the gesture that
+     * sent the user to the store in the first place.
+     *
+     * Why re-apply anything at all: the gate held the gain at 0 dB for the whole locked
+     * session, so the purchase by itself changes nothing audible, and "I paid and nothing
+     * happened" is the worst possible first second of ownership.
+     *
+     * Routed through the coordinator rather than straight at the controller, because
+     * applyQuiet is what also pins the media stream and sets the zone. Calling the
+     * controller alone would apply the gain while the dial still rendered the upper zone.
+     *
+     * A buyer who arrived from the upper zone or from mute has no pending step: they keep
+     * the level they can already see, now unlocked, and the place they left off comes back
+     * on the next start, when initialize() re-applies the persisted level through an open
+     * gate. That restore needs no bookkeeping here; it falls out of the persistence rule.
+     */
+    private fun onKeyInstalled() {
+        if (!unlockedThisSession()) {
+            Log.w(tag, "Key-installed signal received, but ProAccess still reports locked")
+            return
+        }
+        val pending = pendingQuietStepDb
+        pendingQuietStepDb = null
+        if (pending != null) {
+            Log.i(tag, "Key installed: applying the step that was refused (${pending}dB)")
+            coordinator.applyQuiet(pending)
         }
     }
-
-    /** The key arrived while previewing: the buyer keeps the exact depth they heard. */
-    private fun commitPreview() {
-        mainHandler.removeCallbacks(previewTimeout)
-        val target = Prefs.getPreviewStepDb(applicationContext)
-            ?: audioController.attenuationDb.value
-        Prefs.clearPreviewStepDb(applicationContext)
-        audioController.previewBypass = false
-        audioController.setAttenuation(target, AudioController.GainSource.QUIET_STEP)
-    }
-
-    private val previewTimeout = Runnable { endPreview() }
 
     override fun onDestroy() {
         Log.i(tag, "Service stopping (userRequested=$stopRequestedByUser)")

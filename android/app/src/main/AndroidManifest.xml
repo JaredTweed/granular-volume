@@ -47,11 +47,12 @@
             android:parentActivityName=".MainActivity"
             android:label="@string/gv_licenses_title" />
 
-        <!-- Full-range paywall (1.5.0). Translucent host for the upgrade sheet,
-             launched by the service when a locked quiet step is tapped. Stays alive
-             (no noHistory) so the buyer returning from Google Play lands back on it
-             and the previewed depth is committed. Never launched in the F-Droid
-             build, where the full range is free and the gate never fires. -->
+        <!-- Full-range paywall (1.5.0). Translucent host for the upgrade sheet, launched
+             when a locked gesture is refused. Stays alive (no noHistory) so the buyer
+             returning from Google Play lands back on it, where onResume re-checks
+             entitlement and tells the service the key arrived. singleTop so a second
+             locked tap re-delivers instead of stacking a duplicate sheet. Never launched
+             in the F-Droid build, where the full range is free and the gate never fires. -->
         <!-- "Your access" sheet, opened from the dial's info button. Same translucent
              host and sheet theme as the paywall, so both commercial moments look alike. -->
         <activity

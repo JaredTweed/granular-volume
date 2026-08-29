@@ -53,15 +53,18 @@ class FullRangeCoordinator(
      * Defaults to unlocked on purpose, matching [AudioController.proProvider]: a forgotten
      * wiring must fail towards a working app, never towards a paying user losing depth.
      *
-     * The quiet zone does NOT consult this. It goes through the gain gate in
-     * [AudioController], which answers the same question and additionally runs the live
-     * preview. This flag exists for the two gestures that move hardware volume directly and
-     * would otherwise slip past that gate entirely.
+     * ALL THREE locked gestures consult this: quiet step, upper zone and mute. The quiet
+     * step used to be the exception, routed through the gain gate instead so that the gate
+     * could run a live preview of the step. The preview is gone (a trial user has already
+     * had seven days of the full range, so there is nothing left to demonstrate), and with
+     * it the reason for the exception. Refusing here is also the only truthful option: the
+     * gate clamps the GAIN but cannot stop this class from entering the quiet zone, which
+     * would render a step the device is not applying.
      */
     var lockedProvider: () -> Boolean = { false }
 
-    /** A locked device tried to use the upper zone or mute. Opens the paywall, no preview. */
-    var onLockedInteraction: (() -> Unit)? = null
+    /** A locked gesture. Carries the quiet step the user reached for, or null for upper/mute. */
+    var onLockedInteraction: ((pendingQuietStepDb: Float?) -> Unit)? = null
 
     /** Media curve for the current output route; null = fallback to raw indices. */
     @Volatile
@@ -302,7 +305,7 @@ class FullRangeCoordinator(
      * except the remainder, cancels mute if active.
      */
     fun applyUpper(pos: Int) {
-        if (lockedProvider()) { onLockedInteraction?.invoke(); return }
+        if (lockedProvider()) { onLockedInteraction?.invoke(null); return }
         if (isMuted) cancelMute()
         val stream = streamVol.activeStream()
         val curve = mediaCurve
@@ -328,6 +331,11 @@ class FullRangeCoordinator(
      * stream at its floor and hands the rest to the gain — exactly today's behaviour.
      */
     fun applyQuiet(stepDb: Float) {
+        // Locked: refuse before touching anything. Letting this run would pin the media
+        // stream, set zoneQuiet, and render stepDb as the live position while the gate
+        // holds the actual gain at 0 dB. The dial would be stating a level the device
+        // is not applying, on the one screen where we then ask for money.
+        if (lockedProvider()) { onLockedInteraction?.invoke(stepDb); return }
         if (isMuted) cancelMute()
         val media = AudioManager.STREAM_MUSIC
         streamVol.lowerTo(media, streamVol.minAudibleIndex(media))
@@ -354,7 +362,7 @@ class FullRangeCoordinator(
      * anything, so nothing else would have corrected the zone:
      *  - service start, after initialize() re-applies the persisted level through the gate
      *    (a locked device with a stale deep level lands here on EVERY start)
-     *  - the end of the preview ramp, which returns to the locked floor
+     *  - the moment the key arrives mid-session and the stored level is re-applied
      *
      * Before the trial model neither case could arise: the floor was a real -5 dB step,
      * so a clamped level was always a legitimate quiet-zone position.
@@ -368,7 +376,7 @@ class FullRangeCoordinator(
 
     fun toggleMute() {
         // Unmuting is always allowed: a locked device must never be left stuck at silence.
-        if (!isMuted && lockedProvider()) { onLockedInteraction?.invoke(); return }
+        if (!isMuted && lockedProvider()) { onLockedInteraction?.invoke(null); return }
         if (isMuted) cancelMute() else {
             preMuteIndex = streamVol.index(AudioManager.STREAM_MUSIC)
             preMuteAttenuation = audioController.attenuationDb.value

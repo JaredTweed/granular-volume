@@ -15,30 +15,30 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.granularvolume.service.VolumeControlService
-import com.granularvolume.util.Prefs
 import com.granularvolume.util.ProAccess
 
 /**
- * Full-range upgrade sheet (1.5.0). Launched by the service the moment a locked
- * quiet step is tapped — while the LIVE PREVIEW of that step is already audible,
- * because the silence itself is the honest pitch.
+ * Full-range upgrade sheet (1.5.0). Launched by the coordinator the moment a locked
+ * gesture is refused: a quiet step, an upper-zone move, or mute.
+ *
+ * Nothing is playing behind this sheet. The device is held at 0 dB and stays there;
+ * the reader has already spent seven days with the full range and needs no reminder
+ * of what it sounds like, only a way to get it back.
  *
  * Lifecycle contract with the service:
- *  - Dismissed without buying (Not now, tap outside, back, swipe): the service
- *    ramps back to the free floor (ACTION_PREVIEW_END, fired from onDestroy).
+ *  - Dismissed without buying (Not now, tap outside, back, swipe): nothing to undo.
  *  - CTA opens the key app's Play listing; this activity stays alive underneath
  *    (no noHistory), so returning from the store lands back HERE. onResume then
- *    re-checks ProAccess: key present -> ACTION_PREVIEW_COMMIT keeps the exact
- *    depth the buyer previewed. That is the anti-"paid and nothing happened"
- *    mechanism.
+ *    re-checks ProAccess: key present -> ACTION_KEY_INSTALLED, which unlocks the
+ *    session and re-applies the step that was refused. That is the anti-"paid and
+ *    nothing happened" mechanism.
  *
- * No price is rendered in-app — the store listing shows the local price, so
- * nothing here can go stale.
+ * No price is rendered in-app: the store listing shows the local price, so nothing
+ * here can go stale.
  */
 class PaywallActivity : AppCompatActivity() {
 
     private var dialog: BottomSheetDialog? = null
-    private var committed = false
     private var leavingForStore = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,8 +55,7 @@ class PaywallActivity : AppCompatActivity() {
         if (leavingForStore) {
             leavingForStore = false
             if (ProAccess.isPro(this)) {
-                committed = true
-                serviceAction(VolumeControlService.ACTION_PREVIEW_COMMIT)
+                serviceAction(VolumeControlService.ACTION_KEY_INSTALLED)
                 Toast.makeText(this, R.string.gv_paywall_unlocked, Toast.LENGTH_LONG).show()
                 dialog?.setOnCancelListener(null)
                 dialog?.dismiss()
@@ -66,8 +65,6 @@ class PaywallActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // Every path that does not end in a purchase reverts the preview exactly once.
-        if (!committed) serviceAction(VolumeControlService.ACTION_PREVIEW_END)
         dialog?.setOnCancelListener(null)
         dialog?.dismiss()
         dialog = null
@@ -101,13 +98,6 @@ class PaywallActivity : AppCompatActivity() {
 
         root.addView(text(R.string.gv_paywall_title, 19f, bold = true, colorRes = R.color.gv_text_primary))
         root.addView(text(R.string.gv_paywall_depth, 14f, colorRes = R.color.gv_text_secondary).topPad(6))
-        // The preview note is a factual statement ("you are hearing this step right now"), so it
-        // may only appear when a preview is actually playing. The quiet-step path sets the
-        // preview pref before opening this sheet; the upper-zone and mute paths do not run a
-        // preview, and showing the line there would be the sheet's first sentence being false.
-        if (Prefs.getPreviewStepDb(this) != null) {
-            root.addView(text(R.string.gv_paywall_preview_note, 13f, colorRes = R.color.gv_success).topPad(12))
-        }
         root.addView(text(R.string.gv_paywall_body, 13f, colorRes = R.color.gv_text_secondary).topPad(12))
         root.addView(text(R.string.gv_paywall_expectation, 12f, colorRes = R.color.gv_text_muted).topPad(8))
 

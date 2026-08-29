@@ -27,7 +27,6 @@ object Prefs {
     // ── Pro / full-range gate (1.5.0) ───────────────────────────────
     private const val KEY_GRANDFATHERED_PRO      = "grandfathered_pro"
     private const val KEY_GRANDFATHER_EVALUATED  = "grandfather_evaluated"
-    private const val KEY_PREVIEW_STEP_DB        = "preview_step_db"
     private const val KEY_TIPJAR_CARD_SHOWN      = "tipjar_card_shown"
     private const val KEY_UNLOCK_ACKNOWLEDGED    = "unlock_acknowledged"
     private const val KEY_TRIAL_CARD_DAY         = "trial_card_shown_for_day"
@@ -157,23 +156,6 @@ object Prefs {
 
     fun setGrandfatherEvaluated(context: Context) {
         prefs(context).edit { putBoolean(KEY_GRANDFATHER_EVALUATED, true) }
-    }
-
-    /**
-     * The locked step the user previewed at the paywall, so a buyer returning
-     * from the store lands on exactly the depth they heard. NaN = none.
-     */
-    fun getPreviewStepDb(context: Context): Float? {
-        val v = prefs(context).getFloat(KEY_PREVIEW_STEP_DB, Float.NaN)
-        return if (v.isNaN()) null else v
-    }
-
-    fun setPreviewStepDb(context: Context, dB: Float) {
-        prefs(context).edit { putFloat(KEY_PREVIEW_STEP_DB, dB) }
-    }
-
-    fun clearPreviewStepDb(context: Context) {
-        prefs(context).edit { remove(KEY_PREVIEW_STEP_DB) }
     }
 
     /** One-time grandfather tip-jar card in MainActivity: shown once, never again. */

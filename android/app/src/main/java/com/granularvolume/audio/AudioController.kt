@@ -41,15 +41,6 @@ class AudioController(private val context: Context) {
      */
     var proProvider: () -> Boolean = { true }
 
-    /** Paywall live-preview: while true, gate checks are skipped (2.7). */
-    var previewBypass: Boolean = false
-
-    /**
-     * Fired when a non-Pro QUIET_STEP request was clamped — the paywall moment.
-     * Receives the depth the user asked for. UI-thread hop is the listener's job.
-     */
-    var onGateHit: ((requestedDb: Float) -> Unit)? = null
-
     /** Emits current attenuation in dB. UI observes this. */
     private val _attenuationDb = MutableStateFlow(Prefs.getAttenuation(context))
     val attenuationDb: StateFlow<Float> = _attenuationDb.asStateFlow()
@@ -104,7 +95,7 @@ class AudioController(private val context: Context) {
      * exactly those devices.
      */
     enum class GainSource {
-        /** A quiet-zone step the user picked. Gated; the only source that opens the paywall. */
+        /** A quiet-zone step the user picked. Gated, and clamped to the locked floor. */
         QUIET_STEP,
         /**
          * Upper-zone curve remainder. Gated silently: a locked device never reaches the
@@ -126,11 +117,10 @@ class AudioController(private val context: Context) {
      */
     fun setAttenuation(dB: Float, source: GainSource = GainSource.SYSTEM) {
         val requested = dB.coerceIn(Prefs.ATTENUATION_MIN, Prefs.ATTENUATION_MAX)
-        val clamped = if (gateOpen()) requested else {
+        val clamped = if (proProvider()) requested else {
             val limited = requested.coerceAtLeast(lockedFloorDb)
-            if (limited != requested && source == GainSource.QUIET_STEP) {
-                Log.i(tag, "Gate: ${requested}dB requested, held at ${limited}dB")
-                onGateHit?.invoke(requested)
+            if (limited != requested) {
+                Log.i(tag, "Gate: ${requested}dB requested, held at ${limited}dB (source=$source)")
             }
             limited
         }
@@ -140,17 +130,12 @@ class AudioController(private val context: Context) {
         // the dial returns to, and every public surface promises a buyer "every step comes
         // back exactly where you left it" -- so a locked session must never overwrite it.
         // Concretely: while entitled (grandfathered, trial, key) every change persists as
-        // before; while locked, nothing does, so the level from the last entitled day
-        // survives clamps, previews and ramps untouched, and the first entitled start
-        // after the purchase restores it. previewBypass deliberately does not count as
-        // entitlement here: a preview is a demonstration, not a place the user chose to
-        // keep, and the one preview worth keeping -- the one that ends in a purchase --
-        // is re-applied by commitPreview after the key arrives, when this persists again.
+        // before; while locked nothing does, so the level from the last entitled day
+        // survives the clamp untouched and the next entitled start re-applies it through
+        // initialize(). That is the entire restore path, with no separate bookkeeping.
         if (proProvider()) Prefs.setAttenuation(context, clamped)
         Log.d(tag, "Attenuation set to ${clamped}dB (source=$source)")
     }
-
-    private fun gateOpen(): Boolean = previewBypass || proProvider()
 
     /**
      * Convenience: mute immediately (max attenuation). Gated like everything else once the
