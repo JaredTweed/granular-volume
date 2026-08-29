@@ -59,7 +59,7 @@
     <string name="gv_info_state_locked">The dial is locked</string>
     <string name="gv_info_body_grandfathered">You were here before the paid unlock existed, so nothing was taken and nothing will be. If the app matters to you, buying the key is a way to support it.</string>
     <string name="gv_info_body_trial">Everything is open while you try it. When the week is up, keeping the control takes one payment, once, on this account. Nothing renews and nothing is charged on its own.</string>
-    <string name="gv_info_body_trial_last_day">Your free week ends tomorrow, and the dial locks. One payment, once, keeps everything open for good. Every step stays exactly as you have it, with nothing to set up again.</string>
+    <string name="gv_info_body_trial_last_day">Your free week ends within 24 hours, and the dial locks. One payment, once, keeps everything open for good. Every step stays exactly as you have it, with nothing to set up again.</string>
     <string name="gv_info_body_unlocked">Thank you. Every step, the whole range and mute stay open on this account for good.</string>
     <string name="gv_info_body_locked">One payment, once, brings every step back exactly where you left it. Nothing renews and there is no subscription.</string>
     <string name="gv_info_cta_buy">Get Full Range Key on Google Play</string>
@@ -77,6 +77,7 @@
         <item quantity="one">One day left of full access</item>
         <item quantity="other">%d days left of full access</item>
     </plurals>
+    <string name="gv_trial_orientation">Everything is open for your first seven days. After that, a one-time key keeps it, and every step stays exactly where you left it.</string>
     <string name="gv_trial_body">Every step is open while you try it. When the week is up, keeping the control costs a single payment, once, on this account. Nothing renews and nothing is charged on its own.</string>
     <string name="gv_trial_cta">See the key on Google Play</string>
     <string name="gv_trial_dismiss">Later</string>

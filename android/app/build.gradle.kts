@@ -24,7 +24,7 @@ android {
         applicationId = "granularvolume.com"
         minSdk = 28
         targetSdk = 36          // Play requires API 36 (Android 16) for updates from Aug 31, 2026
-        versionCode = 23
+        versionCode = 24
         versionName = "1.5.0"
     }
 

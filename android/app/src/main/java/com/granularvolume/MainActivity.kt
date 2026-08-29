@@ -146,6 +146,10 @@ class MainActivity : AppCompatActivity() {
      * grandfathered user could ever see the card.
      */
     private fun setupTipjarCard(): Boolean {
+        // FIRST, unconditionally: this function has early returns for the grandfathered
+        // and just-bought paths, and a line left over from the trial would greet a buyer
+        // with a promise about a week they have already finished paying to end.
+        setupTrialOrientation()
         val card = findViewById<View>(R.id.gv_tipjar_card)
 
         // A buyer, a grandfathered user and someone on the trial are mutually exclusive, so
@@ -190,6 +194,28 @@ class MainActivity : AppCompatActivity() {
 
         return setupTrialCard(card)
     }
+
+    /**
+     * The quiet half of the trial story: one line, no buttons, shown on the days the
+     * countdown card stays silent.
+     *
+     * It exists because the ONLY places a new user was previously told about the week
+     * were the store listing and the Terms, and nobody reads the Terms. Finding a locked
+     * dial on day eight with no prior notice is the review that costs the most, and it is
+     * free to prevent here: MainActivity is already open and being read while permissions
+     * are granted, so this interrupts nothing.
+     *
+     * Deliberately NOT an offer. No price, no CTA, nothing to tap. The days that need to
+     * sell are 3, 2 and 1, and the card handles those.
+     */
+    private fun setupTrialOrientation() {
+        val line = findViewById<TextView>(R.id.tv_trial_orientation) ?: return
+        val show = BuildConfig.FLAVOR == "play" &&
+            ProAccess.isOnTrial(this) &&
+            Entitlement.daysLeftInTrial(this) > TRIAL_CARD_FROM_DAYS
+        line.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
 
     /**
      * The trial's own card, in the same slot. Two states, and the honest thing in both is to

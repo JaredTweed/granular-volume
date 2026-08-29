@@ -51,6 +51,27 @@
             android:lineSpacingMultiplier="1.3"
             android:layout_marginTop="8dp" />
 
+        <!--
+            Trial orientation. A statement, not a countdown and not an offer: it says what
+            the deal is while the user is already standing here setting permissions up, so
+            nobody can reach day eight and find a lock they were never told about. Hidden
+            for everyone it does not describe (grandfathered, buyer, F-Droid, and the last
+            three days, where the countdown card says something more urgent instead).
+        -->
+        <TextView
+            android:id="@+id/tv_trial_orientation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="@string/gv_trial_orientation"
+            android:textSize="13sp"
+            android:textColor="@color/gv_text_muted"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.3"
+            android:layout_marginTop="14dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp" />
+
         <!-- Status card -->
         <LinearLayout
             android:layout_width="match_parent"
