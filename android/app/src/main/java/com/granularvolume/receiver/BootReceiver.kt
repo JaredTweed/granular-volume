@@ -19,6 +19,9 @@ class BootReceiver : BroadcastReceiver() {
             Log.i("GranularVolume:Boot", "Restarting VolumeControlService after boot")
             context.startForegroundService(
                 Intent(context, VolumeControlService::class.java)
+                    // Marks the start as machine-originated, so the service's purchase
+                    // sheet stays quiet: a boot is not the user opening the control.
+                    .putExtra(VolumeControlService.EXTRA_FROM_BOOT, true)
             )
         }
     }

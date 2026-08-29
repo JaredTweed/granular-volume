@@ -56,6 +56,16 @@ class OverlayManager(
     private val onInfo: () -> Unit
 ) {
 
+    /**
+     * Fired after every VOLUME gesture the dial handles: chevrons, bars, mute.
+     * Deliberately NOT fired for close (a leaving user is never pitched on the way
+     * out) or for the info button (it already opens the sheet this hook exists to
+     * trigger). The service uses it for exactly one thing: the once-only warning on
+     * the trial's final day, so a session that runs across the day boundary still
+     * gets told before the lock, without a single spontaneous popup.
+     */
+    var onEngaged: (() -> Unit)? = null
+
     companion object {
         // Step index 0 = quietest (−30 dB), index 6 = no attenuation (0 dB, at the floor).
         val STEP_DB = floatArrayOf(-30f, -25f, -20f, -15f, -10f, -5f, 0f)
@@ -345,10 +355,10 @@ class OverlayManager(
         // has to win it: an accidental sheet is a tap to dismiss, an accidental close
         // takes the dial away. Same reasoning that already puts chevrons above mute.
         if (hit(btnUp, rawX, rawY, chevronHitSlop)) {
-            pressPulse(btnUp); tick(root); stepCombined(+1); return
+            pressPulse(btnUp); tick(root); stepCombined(+1); onEngaged?.invoke(); return
         }
         if (hit(btnDown, rawX, rawY, chevronHitSlop)) {
-            pressPulse(btnDown); tick(root); stepCombined(-1); return
+            pressPulse(btnDown); tick(root); stepCombined(-1); onEngaged?.invoke(); return
         }
         if (hit(btnInfo, rawX, rawY, infoHitSlop)) {
             flash(btnInfo); onInfo(); return
@@ -357,13 +367,13 @@ class OverlayManager(
             flash(btnDismiss); onDismiss(); return
         }
         if (hit(btnMute, rawX, rawY, muteHitSlop)) {
-            pressPulse(btnMute); confirmHaptic(root); coordinator.toggleMute(); return
+            pressPulse(btnMute); confirmHaptic(root); coordinator.toggleMute(); onEngaged?.invoke(); return
         }
         for (i in upperBars.indices) {
-            if (hit(upperBars[i], rawX, rawY)) { tick(root); coordinator.applyUpper(i); return }
+            if (hit(upperBars[i], rawX, rawY)) { tick(root); coordinator.applyUpper(i); onEngaged?.invoke(); return }
         }
         for (i in quietBars.indices) {
-            if (hit(quietBars[i], rawX, rawY)) { tick(root); selectQuiet(i); return }
+            if (hit(quietBars[i], rawX, rawY)) { tick(root); selectQuiet(i); onEngaged?.invoke(); return }
         }
     }
 

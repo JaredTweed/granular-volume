@@ -108,7 +108,10 @@ class InfoSheetActivity : AppCompatActivity() {
             State.FDROID -> R.string.gv_info_body_fdroid
             State.GRANDFATHERED -> R.string.gv_info_body_grandfathered
             State.UNLOCKED -> R.string.gv_info_body_unlocked
-            State.TRIAL -> R.string.gv_info_body_trial
+            // On the final day the generic trial body would bury the one fact that matters.
+            State.TRIAL ->
+                if (Entitlement.daysLeftInTrial(this) <= 1) R.string.gv_info_body_trial_last_day
+                else R.string.gv_info_body_trial
             State.LOCKED -> R.string.gv_info_body_locked
         }
         root.addView(text(getString(body), 13f, colorRes = R.color.gv_text_secondary).topPad(8))

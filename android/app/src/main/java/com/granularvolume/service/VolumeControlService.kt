@@ -29,6 +29,7 @@ import com.granularvolume.util.ProAccess
 import com.granularvolume.audio.FullRangeCoordinator
 import com.granularvolume.audio.StreamVolumeController
 import com.granularvolume.overlay.OverlayManager
+import com.granularvolume.util.Entitlement
 import com.granularvolume.util.Prefs
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -63,6 +64,14 @@ class VolumeControlService : Service() {
          * rather than at the next service start.
          */
         const val ACTION_KEY_INSTALLED = "com.granularvolume.ACTION_KEY_INSTALLED"
+
+        /**
+         * Boot-restore starts carry this so the purchase sheet stays closed. A boot is
+         * the MACHINE resuming, not the user opening the control, and a sales sheet
+         * over the launcher seconds after power-on is the exact adware gesture this
+         * app must never make.
+         */
+        const val EXTRA_FROM_BOOT = "com.granularvolume.EXTRA_FROM_BOOT"
 
         // Hidden-but-stable system broadcast + extras (no public constants exist for these).
         private const val VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION"
@@ -211,6 +220,7 @@ class VolumeControlService : Service() {
                     Intent(applicationContext, InfoSheetActivity::class.java)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
+        overlayManager.onEngaged = { mainHandler.post { maybeLastDayNudge() } }
             }
         )
 
@@ -267,6 +277,12 @@ class VolumeControlService : Service() {
                 stopSelf()
             }
             ACTION_KEY_INSTALLED -> onKeyInstalled()
+            // A plain start with a real Intent is a person or the boot receiver turning
+            // the control on; a null Intent is only ever the system resurrecting a
+            // killed sticky service, which no one asked for and no sheet may answer.
+            null -> if (intent != null) {
+                onOpenedByUser(fromBoot = intent.getBooleanExtra(EXTRA_FROM_BOOT, false))
+            }
         }
         return START_STICKY
     }
@@ -287,6 +303,43 @@ class VolumeControlService : Service() {
         sessionUnlocked = true
         Log.i(tag, "Full range opened mid-session (key installed)")
         return true
+    }
+
+    /**
+     * The commercial voice of the app, and ALL of it. Two sentences of policy:
+     *
+     *  - Expired: every user-originated start answers with the "Your access" sheet,
+     *    because starting a control that can no longer do anything deserves an
+     *    explanation and the one-tap route to fixing it, every time, uncapped.
+     *  - Final trial day: the sheet interrupts ONCE, to warn that tomorrow it locks.
+     *    Both here (covers a fresh start that day) and from onEngaged (covers a
+     *    session already running when the last day begins).
+     *
+     * Nothing here ever fires on a timer or a boot. A prompt with no user action
+     * behind it is spam, reads as adware in reviews, and risks the Play policy on
+     * interruptive monetization; the daily cadence the model needs is carried by
+     * whichever comes first that day: a start (sheet) or a locked gesture (paywall).
+     */
+    private fun onOpenedByUser(fromBoot: Boolean) {
+        if (fromBoot) return
+        if (ProAccess.isTrialExpired(applicationContext)) { openInfoSheet(); return }
+        maybeLastDayNudge()
+    }
+
+    /** Once, on the trial's final day: cheapest check first, so the everyday cost is one boolean read. */
+    private fun maybeLastDayNudge() {
+        if (Prefs.wasLastDayNudgeShown(applicationContext)) return
+        if (!ProAccess.isOnTrial(applicationContext)) return
+        if (Entitlement.daysLeftInTrial(applicationContext) > 1) return
+        Prefs.setLastDayNudgeShown(applicationContext)
+        openInfoSheet()
+    }
+
+    private fun openInfoSheet() {
+        startActivity(
+            Intent(applicationContext, InfoSheetActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
     }
 
     private fun openPaywall() {
@@ -370,17 +423,23 @@ class VolumeControlService : Service() {
     }
 
     private fun buildNotification(dB: Float): Notification {
-        val tapIntent = PendingIntent.getActivity(
-            this, 0,
-            Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_IMMUTABLE
-        )
         val stopIntent = PendingIntent.getService(
             this, 0,
             Intent(this, VolumeControlService::class.java).apply { action = ACTION_STOP },
             PendingIntent.FLAG_IMMUTABLE
         )
-        val dbText = if (dB == 0f) "Pass-through" else "%.0f dB".format(dB)
+        // A locked control saying "Pass-through" would be the shade lying about why
+        // nothing works. Locked gets the honest line and a tap that opens the sheet:
+        // the notification is the one surface the user sees every single day, so it
+        // carries the standing, silent version of the daily reminder.
+        val locked = ProAccess.isTrialExpired(applicationContext)
+        val tapTarget = if (locked) InfoSheetActivity::class.java else MainActivity::class.java
+        val tapIntent = PendingIntent.getActivity(
+            this, 1, Intent(this, tapTarget), PendingIntent.FLAG_IMMUTABLE
+        )
+        val dbText =
+            if (locked) getString(R.string.gv_notif_locked)
+            else if (dB == 0f) "Pass-through" else "%.0f dB".format(dB)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_volume_slider)

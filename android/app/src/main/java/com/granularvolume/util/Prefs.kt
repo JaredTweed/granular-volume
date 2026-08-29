@@ -30,6 +30,7 @@ object Prefs {
     private const val KEY_TIPJAR_CARD_SHOWN      = "tipjar_card_shown"
     private const val KEY_UNLOCK_ACKNOWLEDGED    = "unlock_acknowledged"
     private const val KEY_TRIAL_CARD_DAY         = "trial_card_shown_for_day"
+    private const val KEY_LAST_DAY_NUDGE_SHOWN   = "last_day_nudge_shown"
 
     /** Current attenuation in dB (0.0 = none, -30.0 = near-silent) */
     const val ATTENUATION_DEFAULT = 0f
@@ -156,6 +157,18 @@ object Prefs {
 
     fun setGrandfatherEvaluated(context: Context) {
         prefs(context).edit { putBoolean(KEY_GRANDFATHER_EVALUATED, true) }
+    }
+
+    /**
+     * The one 24-hours-left warning. A boolean, not a day key: a trial has exactly one
+     * final day per install, and the flag lives in gv_prefs on purpose, OUTSIDE the
+     * backup, so it can never travel to a device it does not describe.
+     */
+    fun wasLastDayNudgeShown(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_LAST_DAY_NUDGE_SHOWN, false)
+
+    fun setLastDayNudgeShown(context: Context) {
+        prefs(context).edit { putBoolean(KEY_LAST_DAY_NUDGE_SHOWN, true) }
     }
 
     /** One-time grandfather tip-jar card in MainActivity: shown once, never again. */
