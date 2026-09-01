@@ -30,10 +30,15 @@ import kotlinx.coroutines.flow.asStateFlow
  *  ABSORB POLICY (external volume changes while in the quiet zone)
  *    THE INVARIANT: corrections only ever LOWER hardware volume.
  *    - our own writes: ignored (self-change flag)
- *    - single-step button press: absorbed — hardware back to floor, attenuation moves 5 dB
- *    - large upward jump: hardware back to floor, attenuation kept (defend the quiet)
+ *    - single-step button press: absorbed — hardware back to floor, attenuation eases 5 dB;
+ *      the press that eases the gain to 0 also EXITS the zone, so the next press reaches the
+ *      hardware untouched (1.5.0 — the pre-fix state was a black hole a one-star review
+ *      described verbatim: "keeps setting the volume back to zero no matter how many times")
+ *    - large upward jump: the FIRST inside the window is defended (floor restored, gain
+ *      kept — the sleeping-baby case); a SECOND inside the window is a human insisting and
+ *      wins outright: gain cleared, zone exited, their level stands
  *    - any downward change: never fought
- *    - fight-loop breaker: too many corrections in a short window → surrender, sync display.
+ *    - touching our own dial always ends an earlier surrender.
  */
 class FullRangeCoordinator(
     context: Context,
@@ -307,6 +312,9 @@ class FullRangeCoordinator(
     fun applyUpper(pos: Int) {
         if (lockedProvider()) { onLockedInteraction?.invoke(null); return }
         if (isMuted) cancelMute()
+        // A touch on the dial is the user telling us who is in charge again: any earlier
+        // surrender to external volume changes ends here.
+        surrendered = false
         val stream = streamVol.activeStream()
         val curve = mediaCurve
         if (stream == AudioManager.STREAM_MUSIC && curve != null) {
@@ -337,8 +345,18 @@ class FullRangeCoordinator(
         // is not applying, on the one screen where we then ask for money.
         if (lockedProvider()) { onLockedInteraction?.invoke(stepDb); return }
         if (isMuted) cancelMute()
+        surrendered = false
         val media = AudioManager.STREAM_MUSIC
         streamVol.lowerTo(media, streamVol.minAudibleIndex(media))
+        // In a call the audible stream is the voice downlink, whose hardware level the media
+        // floor does not touch, and whose reachability by the session-0 gain is OEM-dependent.
+        // Dropping the voice stream to its own minimum here means a quiet-zone tap during a
+        // call always does the hardware part on every device; the gain then attempts the rest
+        // where the platform allows it.
+        if (streamVol.inCall()) {
+            val voice = AudioManager.STREAM_VOICE_CALL
+            streamVol.lowerTo(voice, streamVol.minAudibleIndex(voice))
+        }
         audioController.setAttenuation(stepDb, AudioController.GainSource.QUIET_STEP)
         zoneQuiet = true
         notifyUi()
@@ -421,24 +439,52 @@ class FullRangeCoordinator(
             return
         }
         if (surrendered) { notifyUi(); return }
-        if (!registerCorrection()) {
-            Log.w(tag, "Fight-loop breaker tripped — surrendering, display sync only")
-            surrendered = true
-            notifyUi()
-            return
-        }
 
         val floor = streamVol.minAudibleIndex(stream)
         val current = audioController.attenuationDb.value
         if (to - from == 1) {
             // Single button step up: absorb — back to floor, attenuation eases 5 dB.
+            // Easing is cooperative progress, not a fight, so it never consumes the
+            // correction budget: climbing from -30 takes six quick presses and every
+            // one of them must land.
+            val eased = (current + VolumeCurve.RUNG_DB).coerceAtMost(0f)
             streamVol.lowerTo(stream, floor)
-            audioController.setAttenuation((current + VolumeCurve.RUNG_DB).coerceAtMost(0f), AudioController.GainSource.SYSTEM)
-            Log.i(tag, "Absorbed +1 step: attenuation ${current} -> ${current + VolumeCurve.RUNG_DB}")
+            audioController.setAttenuation(eased, AudioController.GainSource.SYSTEM)
+            if (eased >= 0f) {
+                // The press that climbs OUT of the quiet zone. Before 1.5.0 this state
+                // (zoneQuiet with zero gain) was a black hole: every further press was
+                // confiscated back to the floor while the gain had nowhere left to ease,
+                // which a user experiences as "it keeps setting the volume back to zero
+                // no matter how many times I turn it up" — reported verbatim in a
+                // one-star review on 2026-09-01 and reproduced on an emulator the same
+                // day. Handing the zone flag back here means the NEXT press reaches the
+                // hardware untouched, so the ladder stays continuous: 5 dB per press all
+                // the way from -30 to the device maximum.
+                zoneQuiet = false
+                Log.i(tag, "Absorbed final step: quiet zone exited, hardware presses now pass")
+            } else {
+                Log.i(tag, "Absorbed +1 step: attenuation ${current} -> ${eased}")
+            }
         } else {
-            // Large jump (an app set 70%): defend the quiet — floor restored, attenuation kept.
-            streamVol.lowerTo(stream, floor)
-            Log.i(tag, "Defended quiet zone against jump $from -> $to")
+            // Large jump (an app set 70%). The first one inside the window is defended:
+            // floor restored, attenuation kept — this is the sleeping-baby case, where a
+            // media app decides to blast and the whole point of the app is that it loses.
+            // A SECOND large raise inside the window cannot plausibly be an app command
+            // repeating coincidentally; it is a person dragging the system slider again
+            // because the first drag "didn't take". A person outranks the quiet zone:
+            // surrender completely — accept their level, clear the gain, exit the zone —
+            // because an app that keeps snapping the slider to zero against a human hand
+            // is indistinguishable from malware to that human.
+            if (!registerCorrection()) {
+                Log.w(tag, "Second large raise inside the window — human insists, handing volume back")
+                surrendered = true
+                zoneQuiet = false
+                audioController.setAttenuation(0f, AudioController.GainSource.SYSTEM)
+                // No lowerTo: the user's requested index stands.
+            } else {
+                streamVol.lowerTo(stream, floor)
+                Log.i(tag, "Defended quiet zone against jump $from -> $to")
+            }
         }
         notifyUi()
     }
@@ -461,7 +507,10 @@ class FullRangeCoordinator(
         emitFlash(if (invite) FlashTarget.QUIET_FIRST else FlashTarget.UPPER_CURRENT)
     }
 
-    /** Sliding window rate limit. @return false when the fight-loop breaker should trip. */
+    /**
+     * Sliding window over DEFEND corrections only (easing never counts).
+     * @return false when a second large raise lands inside the window, i.e. a human insists.
+     */
     private fun registerCorrection(): Boolean {
         val now = SystemClock.elapsedRealtime()
         correctionTimesMs.addLast(now)
@@ -476,9 +525,12 @@ class FullRangeCoordinator(
     }
 
     companion object {
-        // Tuned on real hardware during Round A; spec placeholders until then.
-        private const val FIGHT_WINDOW_MS = 5_000L
-        private const val MAX_CORRECTIONS_IN_WINDOW = 3
+        // 1.5.0 retune after the 2026-09-01 review reproduction: the old 3-in-5s breaker
+        // only rescued RAPID retries and let a patient person fight the defend branch
+        // forever (one slider drag every few seconds never trips 3-in-5s). Two large raises
+        // within ten seconds is the human signature; the second one wins outright.
+        private const val FIGHT_WINDOW_MS = 10_000L
+        private const val MAX_CORRECTIONS_IN_WINDOW = 1
 
         // Reattach timing. Settle: long enough for telephony/Bluetooth routing to finish
         // opening its output after a mode or device event, short enough that at most the
