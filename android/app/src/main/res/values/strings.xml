@@ -107,4 +107,8 @@
     <string name="gv_unlocked_body">Thank you. Every step down to −30 dB is open on this device now. Start the control and choose any step below the orange line.</string>
     <string name="gv_unlocked_dismiss">Got it</string>
 
+    <!-- Shown when a quiet step is tapped during a CELLULAR call, where Android routes the
+         voice through an output that runs no audio effects, so the gain cannot reach it.
+         VoIP calls are unaffected and never show this. -->
+    <string name="gv_quiet_unavailable_in_call">Call audio cannot go below the phone minimum</string>
 </resources>

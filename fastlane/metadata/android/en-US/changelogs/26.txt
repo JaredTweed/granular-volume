@@ -5,5 +5,7 @@ instead of being pulled back down.
 If something keeps raising the volume while the quiet zone is protecting it,
 a second raise by you now wins immediately.
 
-During calls, selecting a quiet step now also lowers the call volume to its
-minimum on every device.
+During a regular phone call the quiet steps are shown dimmed, because Android
+routes call audio through a path that carries no audio effects and nothing can
+lower it further. App calls such as WhatsApp are unaffected and still use the
+full range.

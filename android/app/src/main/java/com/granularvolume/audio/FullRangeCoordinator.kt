@@ -71,6 +71,12 @@ class FullRangeCoordinator(
     /** A locked gesture. Carries the quiet step the user reached for, or null for upper/mute. */
     var onLockedInteraction: ((pendingQuietStepDb: Float?) -> Unit)? = null
 
+    /**
+     * A quiet step was tapped during a cellular call, where it cannot do anything. The
+     * overlay answers with one short line rather than moving a bar that would be a lie.
+     */
+    var onQuietUnavailable: (() -> Unit)? = null
+
     /** Media curve for the current output route; null = fallback to raw indices. */
     @Volatile
     var mediaCurve: VolumeCurve? = null
@@ -131,7 +137,13 @@ class FullRangeCoordinator(
         val quietDb: Float,
         val upperPos: Int,
         val upperCount: Int,
-        val percent: Int
+        val percent: Int,
+        /**
+         * The quiet zone cannot act right now, so the dial must not offer it as if it could.
+         * True only during a CELLULAR call; see [StreamVolumeController.inCellularCall] for
+         * the AudioFlinger measurement behind it. VoIP calls are unaffected.
+         */
+        val quietUnavailable: Boolean
     )
 
     fun uiState(): UiState {
@@ -145,7 +157,8 @@ class FullRangeCoordinator(
             quietDb = audioController.attenuationDb.value,
             upperPos = currentUpperPos(stream, idx),
             upperCount = upperPositionCount(),
-            percent = percent
+            percent = percent,
+            quietUnavailable = streamVol.inCellularCall()
         )
     }
 
@@ -177,7 +190,7 @@ class FullRangeCoordinator(
      * not need this — they evaluate the stream live — this is display-freshness only.
      */
     fun onAudioModeChanged() {
-        Log.i(tag, "Audio mode changed — re-rendering (inCall=${streamVol.inCall()})")
+        Log.i(tag, "Audio mode changed — re-rendering (inCall=${streamVol.inCall()}, " + "cellular=${streamVol.inCellularCall()}) — cellular dims the quiet zone")
         // In-call fix (2026-08-16): the effect chain sits on the output thread policy chose
         // at creation time, and a call moves audio to a different output on many devices.
         // Rebuild the effect so policy can re-attach it to the output that is live NOW.
@@ -344,15 +357,20 @@ class FullRangeCoordinator(
         // holds the actual gain at 0 dB. The dial would be stating a level the device
         // is not applying, on the one screen where we then ask for money.
         if (lockedProvider()) { onLockedInteraction?.invoke(stepDb); return }
+        // Cellular call: refuse before touching anything, for the same reason the locked gate
+        // refuses above. The gain physically cannot reach the telephony output (measurement in
+        // StreamVolumeController.inCellularCall), so running this would pin the media stream,
+        // set zoneQuiet and light a -15 dB bar while the caller's voice carried on at exactly
+        // the same loudness. A dial that moves while the sound does not is the one thing this
+        // class must never do. VoIP calls fall through and work normally.
+        if (streamVol.inCellularCall()) { onQuietUnavailable?.invoke(); notifyUi(); return }
         if (isMuted) cancelMute()
         surrendered = false
         val media = AudioManager.STREAM_MUSIC
         streamVol.lowerTo(media, streamVol.minAudibleIndex(media))
-        // In a call the audible stream is the voice downlink, whose hardware level the media
-        // floor does not touch, and whose reachability by the session-0 gain is OEM-dependent.
-        // Dropping the voice stream to its own minimum here means a quiet-zone tap during a
-        // call always does the hardware part on every device; the gain then attempts the rest
-        // where the platform allows it.
+        // VoIP call: the audible stream is the voice stream, which the media floor does not
+        // touch. Drop it to its own minimum too, so hardware does its half and the gain (which
+        // DOES reach VoIP audio, owner-verified in a WhatsApp call) carries the rest.
         if (streamVol.inCall()) {
             val voice = AudioManager.STREAM_VOICE_CALL
             streamVol.lowerTo(voice, streamVol.minAudibleIndex(voice))

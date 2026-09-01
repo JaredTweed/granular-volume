@@ -203,6 +203,17 @@ class VolumeControlService : Service() {
                 openPaywall()
             }
         }
+        coordinator.onQuietUnavailable = {
+            mainHandler.post {
+                // One short line instead of a bar that would move without the sound moving.
+                Log.i(tag, "Quiet step refused: cellular call carries no effect chain")
+                Toast.makeText(
+                    applicationContext,
+                    getString(R.string.gv_quiet_unavailable_in_call),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
         // The dial is the only surface a set-up user still sees, so it carries the one
         // route to status, purchase and the legal texts. NEW_TASK because the caller is a
         // service, exactly as with the paywall sheet.

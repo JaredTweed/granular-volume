@@ -1,4 +1,4 @@
-Is your Android volume still too loud even at the lowest setting, on calls, media, or notifications? Your phone or tablet stops at its hardware minimum. Granular Volume goes below it.
+Is your Android volume still too loud even at the lowest setting, in media, ringtones, or notifications? Your phone or tablet stops at its hardware minimum. Granular Volume goes below it.
 
 A small floating control appears above any app, with your whole volume range on one slider: normal system volume above your device's minimum line, and a quiet zone below it, seven steps down to a full 30 dB under the hardware minimum. Drag it anywhere, tuck it to an edge, close it when done. Your position is saved.
 
@@ -20,7 +20,7 @@ QUICK SETTINGS TILE
 Swipe down, tap once. Add Granular Volume to your Quick Settings panel and toggle the overlay on or off without ever opening the app. No shortcuts to set up, no widgets to place.
 
 MADE FOR QUIET MOMENTS
-- Phone and app calls on most phones. A few devices route call audio in hardware, where no app can reach it
+- App calls such as WhatsApp, which run through the normal audio path. Regular phone calls do not: Android carries those on a separate path that no app can lower further, so there the control gives you your phone's own steps and the quiet steps are shown dimmed
 - Sensitive IEMs and high-sensitivity headphones, where even step 1 is too loud
 - Tablet speakers and headphones, where the minimum step is often even louder than on phones
 - White noise or lullabies for a sleeping baby, kept barely audible
