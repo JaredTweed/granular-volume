@@ -20,11 +20,18 @@ android {
     namespace = "com.granularvolume"
     compileSdk = 36
 
+    // F-Droid requires this: AGP otherwise embeds a Google-encrypted dependency
+    // metadata block in the APK signing block (fdroiddata issue, 2026-09-02).
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     defaultConfig {
         applicationId = "granularvolume.com"
         minSdk = 28
         targetSdk = 36          // Play requires API 36 (Android 16) for updates from Aug 31, 2026
-        versionCode = 26
+        versionCode = 29
         versionName = "1.5.0"
     }
 
