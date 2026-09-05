@@ -7,5 +7,5 @@ a second raise by you now wins immediately.
 
 During a regular phone call the quiet steps are shown dimmed, because Android
 routes call audio through a path that carries no audio effects and nothing can
-lower it further. App calls such as WhatsApp are unaffected and still use the
+lower it further. App calls such as WhatsApp are usually unaffected and still use the
 full range.

@@ -20,7 +20,7 @@ QUICK SETTINGS TILE
 Swipe down, tap once. Add Granular Volume to your Quick Settings panel and toggle the overlay on or off without ever opening the app. No shortcuts to set up, no widgets to place.
 
 MADE FOR QUIET MOMENTS
-- App calls such as WhatsApp, which run through the normal audio path. Regular phone calls do not: Android carries those on a separate path that no app can lower further, so there the control gives you your phone's own steps and the quiet steps are shown dimmed
+- App calls such as WhatsApp on most phones, because that audio normally runs through the normal audio path. Regular phone calls never do: Android carries those on a separate path that no app can lower further, so there the control gives you your phone's own steps and the quiet steps are shown dimmed
 - Sensitive IEMs and high-sensitivity headphones, where even step 1 is too loud
 - Tablet speakers and headphones, where the minimum step is often even louder than on phones
 - White noise or lullabies for a sleeping baby, kept barely audible
