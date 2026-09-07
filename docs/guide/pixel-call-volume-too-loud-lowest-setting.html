@@ -126,10 +126,19 @@
 
   footer{padding:48px 0 72px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px;}
   footer a{color:var(--accent2);text-decoration:none;}
+
+  /* Keyboard accessibility. Nothing here changes the page for mouse users. */
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:999;padding:12px 20px;
+    background:var(--accent2);color:var(--bg0);font-weight:700;text-decoration:none;
+    border-radius:0 0 10px 0;}
+  .skip-link:focus{left:0;}
+  :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
+  main:focus{outline:none;}
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to the main content</a>
 <div class="wrap">
 
   <header class="top">
@@ -139,6 +148,7 @@
     <p class="dek">One accessibility setting is worth checking before anything else, because it fixes this outright for some people. If that is not it, the in-call floor itself is the problem, and here is what does and does not move it. No root.</p>
     <p class="meta">Published July 29, 2026 &middot; 7 min read</p>
   </header>
+<main id="main" tabindex="-1">
 
   <article>
     <p class="lead-p">You hold the phone to your ear, press volume down until it stops, and the other person is still uncomfortably loud. This turns up on Pixel phones often enough that the same question has been asked about several generations in Google's own support community, usually with the volume keys already at the bottom. There are two genuinely different causes here, they need different fixes, and it is worth ruling out the quick one first.</p>
@@ -257,6 +267,7 @@
     </dl>
   </article>
 
+</main>
 </div>
 <footer>
   <div class="wrap">

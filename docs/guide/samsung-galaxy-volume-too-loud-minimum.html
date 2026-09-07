@@ -123,10 +123,19 @@
 
   footer{padding:48px 0 72px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px;}
   footer a{color:var(--accent2);text-decoration:none;}
+
+  /* Keyboard accessibility. Nothing here changes the page for mouse users. */
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:999;padding:12px 20px;
+    background:var(--accent2);color:var(--bg0);font-weight:700;text-decoration:none;
+    border-radius:0 0 10px 0;}
+  .skip-link:focus{left:0;}
+  :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
+  main:focus{outline:none;}
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to the main content</a>
 <div class="wrap">
 
   <header class="top">
@@ -136,6 +145,7 @@
     <p class="dek">Why the lowest step on Galaxy phones, tablets, and Buds is still too loud, why Sound Assistant helps but only so far, and the method that actually goes below Samsung's hardware floor. No root, no Good Lock.</p>
     <p class="meta">Updated July 30, 2026 · 8 min read</p>
   </header>
+<main id="main" tabindex="-1">
 
   <article>
     <p class="lead-p">If the first notch above mute on your Galaxy is still too loud, in a quiet room, next to a sleeping baby, or through Galaxy Buds, you are hitting a real limit, not doing something wrong. This is one of the longest-running complaints on Samsung's own community forums, reopened with every device generation from the Galaxy S9 to the S24. Here is why it happens on Samsung specifically, why the popular fixes fall short, and the one approach that actually lowers the floor.</p>
@@ -221,6 +231,7 @@
     </dl>
   </article>
 
+</main>
 </div>
 <footer>
   <div class="wrap">

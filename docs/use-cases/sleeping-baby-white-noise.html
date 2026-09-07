@@ -104,10 +104,19 @@
   .faq dd{color:var(--muted);margin:8px 0 0;font-size:16px;}
   footer{padding:48px 0 72px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px;}
   footer a{color:var(--accent2);text-decoration:none;}
+
+  /* Keyboard accessibility. Nothing here changes the page for mouse users. */
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:999;padding:12px 20px;
+    background:var(--accent2);color:var(--bg0);font-weight:700;text-decoration:none;
+    border-radius:0 0 10px 0;}
+  .skip-link:focus{left:0;}
+  :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
+  main:focus{outline:none;}
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to the main content</a>
 <div class="wrap">
 
   <header class="top">
@@ -117,6 +126,7 @@
     <p class="dek">Phones and tablets are built to be heard across a room. A crib a few feet away needs something much quieter than that, and Android's own volume slider usually can't get there.</p>
     <p class="meta">Updated July 14, 2026 · 4 min read</p>
   </header>
+<main id="main" tabindex="-1">
 
   <article>
     <p class="lead-p">White noise and lullaby apps are one of the most common reasons people go looking for a quieter volume setting than their phone offers. The problem isn't the app playing the sound. It's that the device's lowest non-mute volume step is calibrated for normal listening, not for something meant to be barely audible next to a sleeping baby.</p>
@@ -168,6 +178,7 @@
     </dl>
   </article>
 
+</main>
 </div>
 <footer>
   <div class="wrap">

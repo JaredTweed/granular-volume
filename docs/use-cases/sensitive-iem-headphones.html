@@ -104,10 +104,19 @@
   .faq dd{color:var(--muted);margin:8px 0 0;font-size:16px;}
   footer{padding:48px 0 72px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px;}
   footer a{color:var(--accent2);text-decoration:none;}
+
+  /* Keyboard accessibility. Nothing here changes the page for mouse users. */
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:999;padding:12px 20px;
+    background:var(--accent2);color:var(--bg0);font-weight:700;text-decoration:none;
+    border-radius:0 0 10px 0;}
+  .skip-link:focus{left:0;}
+  :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
+  main:focus{outline:none;}
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to the main content</a>
 <div class="wrap">
 
   <header class="top">
@@ -117,6 +126,7 @@
     <p class="dek">A phone's minimum volume step is set for average headphones. In-ear monitors and bone conduction headphones aren't average, and that gap is exactly why the lowest setting still feels too loud.</p>
     <p class="meta">Updated July 14, 2026 · 4 min read</p>
   </header>
+<main id="main" tabindex="-1">
 
   <article>
     <p class="lead-p">In-ear monitors are usually far more sensitive than the earbuds or headphones a phone's volume curve was tuned around, often specified in decibels of output per milliwatt of input rather than the rougher "loud/quiet" range typical consumer earbuds are designed for. Bone conduction headphones have a different problem: at low volumes the vibration itself can feel uncomfortable in a way that's separate from perceived loudness. Both end up in the same place: the phone's lowest non-mute step is genuinely too much.</p>
@@ -167,6 +177,7 @@
     </dl>
   </article>
 
+</main>
 </div>
 <footer>
   <div class="wrap">
