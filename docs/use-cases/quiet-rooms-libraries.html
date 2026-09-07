@@ -112,6 +112,11 @@
   .skip-link:focus{left:0;}
   :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
   main:focus{outline:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{transition:none !important;animation:none !important;}
+  }
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
@@ -184,6 +189,8 @@
   <div class="wrap">
     Part of <a href="../index.html">Granular Volume</a>, free software under the
     <a href="https://github.com/Rzuss/granular-volume/blob/main/LICENSE">GNU GPL-3.0</a>.
+    <a href="https://rzuss.github.io/granular-volume-privacy/">Privacy Policy</a> &middot;
+    <a href="https://rzuss.github.io/granular-volume-privacy/terms-of-use.html">Terms of Use</a> &middot;
     See also: <a href="../guide/lower-android-volume-below-minimum.html">the full guide</a> ·
     <a href="night-audiobooks-podcasts.html">falling asleep to audio</a> ·
     <a href="sleeping-baby-white-noise.html">quiet white noise for a sleeping baby</a> ·
