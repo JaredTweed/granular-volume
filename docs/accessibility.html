@@ -60,6 +60,11 @@
   .skip-link:focus{left:0;}
   :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
   main:focus{outline:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{transition:none !important;animation:none !important;}
+  }
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
@@ -70,8 +75,8 @@
   <header class="top">
     <div class="crumb"><a href="index.html">Granular Volume</a> / Accessibility</div>
     <h1>Accessibility Statement</h1>
-    <p class="dek">This app exists for people who find ordinary volume too loud. A website that sells it should not be hard to use. Here is exactly where this one stands, including the parts that are not finished.</p>
-    <p class="meta">Applies to <b>granularvolume.com</b> &middot; Published September 7, 2026 &middot; Last reviewed September 7, 2026</p>
+    <p class="dek">This app exists for people who find ordinary volume too loud. A website about it should not be hard to use. Here is exactly where this one stands, including the parts that are not finished.</p>
+    <p class="meta">Applies to <b>granularvolume.com</b> and to the privacy and terms pages at <b>rzuss.github.io/granular-volume-privacy</b> &middot; Published September 7, 2026 &middot; Last reviewed September 7, 2026</p>
   </header>
 
 <main id="main" tabindex="-1">
@@ -95,6 +100,13 @@
       <li>Keyboard focus is always visible, as a high-contrast outline around whatever is focused.</li>
       <li>The site is plain HTML and CSS. It works without JavaScript, it reflows to any window size, and text can be enlarged with the browser's own zoom without content being lost.</li>
       <li>Nothing on the site moves, flashes, plays automatically or times out.</li>
+    </ul>
+
+    <h2>Browsers and assistive technology</h2>
+    <p>The site is plain HTML and CSS with no framework, so it depends on nothing exotic. It is expected to work in the current versions of Chrome, Firefox, Safari and Edge, on desktop and on Android and iOS, and it respects the operating system's reduced-motion setting.</p>
+    <ul>
+      <li><b>Tested on September 7, 2026:</b> keyboard-only navigation in Chrome on Windows, including the skip link, focus order and focus visibility, on every page.</li>
+      <li><b>Not yet tested:</b> a full pass with NVDA, JAWS, VoiceOver or TalkBack, and testing at 200% browser zoom on small screens. The structure those tools rely on is in place, but that is not the same as having run them.</li>
     </ul>
 
     <h2>Known limitations, stated plainly</h2>
@@ -146,6 +158,8 @@
         <li>האתר בנוי HTML ו־CSS בלבד, עובד ללא JavaScript, ומאפשר הגדלת טקסט בדפדפן ללא אובדן תוכן.</li>
         <li>אין באתר תוכן נע, מהבהב, מתנגן אוטומטית או מוגבל בזמן.</li>
       </ul>
+      <h3>דפדפנים וטכנולוגיה מסייעת</h3>
+      <p>האתר בנוי HTML ו־CSS בלבד ואמור לעבוד בגרסאות העדכניות של Chrome, Firefox, Safari ו־Edge, במחשב ובטלפון, ומכבד את הגדרת הפחתת התנועה של מערכת ההפעלה. נבדק ב־7 בספטמבר 2026 בניווט מקלדת בלבד ב־Chrome בכל הדפים. טרם נבדק במלואו עם קוראי מסך (NVDA, JAWS, VoiceOver, TalkBack).</p>
       <h3>מגבלות ידועות</h3>
       <ul>
         <li>לא בוצעה ביקורת נגישות על ידי גורם חיצוני.</li>

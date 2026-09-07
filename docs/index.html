@@ -121,6 +121,11 @@
   .skip-link:focus{left:0;}
   :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
   main:focus{outline:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{transition:none !important;animation:none !important;}
+  }
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
@@ -153,15 +158,32 @@
     <h2>See it, and hear it</h2>
     <p class="lead">Watch Android's own slider run out of room, then watch the dial keep going below it. The audio in the video drops with every step on screen.</p>
     <div style="max-width:360px;margin:28px auto 0;">
-      <div style="position:relative;padding-top:177.78%;border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.45);">
-        <iframe
-          style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
-          src="https://www.youtube-nocookie.com/embed/_c5YBBeVgaU"
-          title="Quiet Dial: your whole Android volume range on one slider"
-          loading="lazy"
-          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen></iframe>
+      <div class="video-facade" style="position:relative;padding-top:177.78%;border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.45);background:#0a0e1d;">
+        <a class="video-poster" href="https://www.youtube-nocookie.com/embed/_c5YBBeVgaU" data-embed="https://www.youtube-nocookie.com/embed/_c5YBBeVgaU?autoplay=1"
+           style="position:absolute;inset:0;display:block;color:#fff;text-decoration:none;"
+           aria-label="Play the demo video. It loads from YouTube only after you press play.">
+          <img src="img/demo-poster.jpg" alt="The Quiet Dial overlay on an Android home screen: a vertical slider with the quiet steps below the orange line" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+          <span aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:84px;height:84px;border-radius:50%;background:rgba(10,14,29,.82);border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </span>
+          <span style="position:absolute;left:0;right:0;bottom:0;padding:14px 16px;font-size:13px;line-height:1.4;background:linear-gradient(transparent,rgba(10,14,29,.92));">Press play to load the video from YouTube. Nothing is loaded from Google until you do.</span>
+        </a>
       </div>
+      <script>
+      (function(){
+        var a=document.querySelector('.video-poster'); if(!a) return;
+        a.addEventListener('click',function(ev){
+          ev.preventDefault();
+          var f=document.createElement('iframe');
+          f.src=a.getAttribute('data-embed');
+          f.title="Quiet Dial: your whole Android volume range on one slider";
+          f.setAttribute('allow','accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+          f.setAttribute('allowfullscreen','');
+          f.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
+          a.parentNode.replaceChild(f,a); f.focus();
+        });
+      })();
+      </script>
     </div>
   </section>
 

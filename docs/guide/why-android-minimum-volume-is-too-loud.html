@@ -129,6 +129,11 @@
   .skip-link:focus{left:0;}
   :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
   main:focus{outline:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{transition:none !important;animation:none !important;}
+  }
 </style><script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
