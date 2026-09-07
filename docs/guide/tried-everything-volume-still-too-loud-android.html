@@ -126,10 +126,19 @@
 
   footer{padding:48px 0 72px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px;}
   footer a{color:var(--accent2);text-decoration:none;}
+
+  /* Keyboard accessibility. Nothing here changes the page for mouse users. */
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:999;padding:12px 20px;
+    background:var(--accent2);color:var(--bg0);font-weight:700;text-decoration:none;
+    border-radius:0 0 10px 0;}
+  .skip-link:focus{left:0;}
+  :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
+  main:focus{outline:none;}
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to the main content</a>
 <div class="wrap">
 
   <header class="top">
@@ -139,6 +148,7 @@
     <p class="dek">Volume limiter apps, the 85 dB limit, every equalizer preset, fine-step volume tools, Normalize Volume. If you've worked through that whole list and the lowest step is still too loud, here is why each one missed, and the one mechanism none of them use.</p>
     <p class="meta">Published July 28, 2026 &middot; 7 min read</p>
   </header>
+<main id="main" tabindex="-1">
 
   <article>
     <p class="lead-p">There's a specific kind of frustration that only shows up after you've actually tried to fix this. Not "have you tried turning the volume down," you've tried that, that's the entire problem. You've gone further: a limiter app, the safety settings, the equalizer, maybe a manufacturer tool that promises finer steps. None of it moved the floor. That's not bad luck. Every one of those tools was built to solve a different problem than yours.</p>
@@ -236,6 +246,7 @@
     </dl>
   </article>
 
+</main>
 </div>
 <footer>
   <div class="wrap">

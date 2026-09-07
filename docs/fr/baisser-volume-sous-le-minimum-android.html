@@ -114,9 +114,18 @@
 
   footer{padding:48px 0 72px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px;}
   footer a{color:var(--accent2);text-decoration:none;}
+
+  /* Keyboard accessibility. Nothing here changes the page for mouse users. */
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:999;padding:12px 20px;
+    background:var(--accent2);color:var(--bg0);font-weight:700;text-decoration:none;
+    border-radius:0 0 10px 0;}
+  .skip-link:focus{left:0;}
+  :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
+  main:focus{outline:none;}
 </style><script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#main">Aller au contenu principal</a>
 <div class="wrap">
 
   <header class="top">
@@ -126,6 +135,7 @@
     <p class="dek">Vous avez baissé le son jusqu'en bas et c'est encore trop fort. Ce n'est ni une panne ni un réglage caché : la dernière marche avant le silence est placée volontairement haut. Voici pourquoi, et ce qui permet réellement de descendre en dessous.</p>
     <p class="meta">Publié le 1er septembre 2026 &middot; 7 min de lecture</p>
   </header>
+<main id="main" tabindex="-1">
 
   <article>
 
@@ -224,6 +234,7 @@
 
   </article>
 
+</main>
 </div>
 <footer>
   <div class="wrap">

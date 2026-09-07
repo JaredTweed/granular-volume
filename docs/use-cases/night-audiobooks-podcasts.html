@@ -104,10 +104,19 @@
   .faq dd{color:var(--muted);margin:8px 0 0;font-size:16px;}
   footer{padding:48px 0 72px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px;}
   footer a{color:var(--accent2);text-decoration:none;}
+
+  /* Keyboard accessibility. Nothing here changes the page for mouse users. */
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:999;padding:12px 20px;
+    background:var(--accent2);color:var(--bg0);font-weight:700;text-decoration:none;
+    border-radius:0 0 10px 0;}
+  .skip-link:focus{left:0;}
+  :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
+  main:focus{outline:none;}
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to the main content</a>
 <div class="wrap">
 
   <header class="top">
@@ -117,6 +126,7 @@
     <p class="dek">A phone's lowest volume step is loud enough to hear from across a room, which is exactly the wrong loudness for something meant to be almost inaudible next to someone sleeping.</p>
     <p class="meta">Updated July 14, 2026 · 4 min read</p>
   </header>
+<main id="main" tabindex="-1">
 
   <article>
     <p class="lead-p">Falling asleep to a podcast or an audiobook only works if it's quiet enough not to become the thing that keeps someone else awake instead. For a lot of phones and tablets, the lowest non-mute volume step doesn't get there. It's calibrated for normal daytime listening, not for something meant to fade into the background of a dark, quiet bedroom.</p>
@@ -167,6 +177,7 @@
     </dl>
   </article>
 
+</main>
 </div>
 <footer>
   <div class="wrap">

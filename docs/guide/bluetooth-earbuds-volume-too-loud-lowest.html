@@ -125,10 +125,19 @@
 
   footer{padding:48px 0 72px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px;}
   footer a{color:var(--accent2);text-decoration:none;}
+
+  /* Keyboard accessibility. Nothing here changes the page for mouse users. */
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:999;padding:12px 20px;
+    background:var(--accent2);color:var(--bg0);font-weight:700;text-decoration:none;
+    border-radius:0 0 10px 0;}
+  .skip-link:focus{left:0;}
+  :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
+  main:focus{outline:none;}
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to the main content</a>
 <div class="wrap">
 
   <header class="top">
@@ -138,6 +147,7 @@
     <p class="dek">Why one Bluetooth step is such a big jump, why disabling Absolute Volume only half-helps, and the method that adds real steps below the lowest, on any wireless or wired earbuds. No root.</p>
     <p class="meta">Updated July 22, 2026 · 7 min read</p>
   </header>
+<main id="main" tabindex="-1">
 
   <article>
     <p class="lead-p">You turn the media volume all the way down, and the last step before mute is still too loud in your ears, or the jump between two steps is so big that one is too quiet and the next is too loud. It is one of the most common complaints about wireless earbuds on Android, across every brand, and it has a specific cause and a real fix.</p>
@@ -246,6 +256,7 @@
     </dl>
   </article>
 
+</main>
 </div>
 <footer>
   <div class="wrap">
