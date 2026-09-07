@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessibility Statement | Granular Volume</title>
+<meta name="description" content="How accessible granularvolume.com is, measured against WCAG 2.1 level AA: what conforms, what does not, and how to reach a person who will fix it or send you the content another way.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://granularvolume.com/accessibility.html">
+<meta property="og:title" content="Accessibility Statement | Granular Volume">
+<meta property="og:description" content="What conforms, what does not, and how to reach a person who will fix it or send you the content another way.">
+<meta property="og:type" content="article">
+<link rel="icon" href="img/icon.png">
+<style>
+  :root{
+    --bg0:#0a0e1d; --bg1:#121833; --card:#161232; --accent:#6C63FF; --accent2:#22d3ee;
+    --txt:#f4f6ff; --muted:#9aa3c7; --line:rgba(255,255,255,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:"Inter","Segoe UI",system-ui,sans-serif;color:var(--txt);
+    background:
+      radial-gradient(80% 50% at 75% 0%, #232a55 0%, rgba(35,42,85,0) 60%),
+      linear-gradient(180deg,#121833 0%, #0a0e1d 40%);
+    line-height:1.65;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+  a{color:var(--accent2);}
+  header.top{padding:56px 0 8px;}
+  .crumb{font-size:14px;color:var(--muted);margin-bottom:22px;}
+  .crumb a{color:var(--muted);text-decoration:none;}
+  .crumb a:hover{color:var(--accent2);}
+  h1{font-size:clamp(30px,5.5vw,44px);font-weight:900;letter-spacing:-.7px;line-height:1.12;margin-bottom:16px;}
+  .dek{color:var(--muted);font-size:19px;max-width:640px;}
+  .meta{color:var(--muted);font-size:14px;margin-top:18px;padding-bottom:36px;border-bottom:1px solid var(--line);}
+  article{padding:36px 0;}
+  article h2{font-size:24px;font-weight:800;margin:40px 0 14px;letter-spacing:-.2px;}
+  article h3{font-size:18px;font-weight:700;margin:26px 0 10px;}
+  article p{margin-bottom:16px;font-size:17px;color:#e3e5f7;}
+  article ul{margin:0 0 16px 22px;font-size:17px;color:#e3e5f7;}
+  article li{margin-bottom:8px;}
+  .lead-p{font-size:18px;color:var(--txt);}
+  .callout{background:linear-gradient(145deg, rgba(108,99,255,.14), rgba(34,211,238,.08));
+    border:1px solid rgba(108,99,255,.35);border-radius:18px;padding:28px 30px;margin:36px 0;}
+  .callout h2{margin-top:0;}
+  .kv{list-style:none;margin:0;padding:0;}
+  .kv li{margin-bottom:10px;font-size:17px;color:#e3e5f7;}
+  .kv b{color:var(--txt);}
+  .he{direction:rtl;text-align:right;border-top:1px solid var(--line);margin-top:48px;padding-top:8px;}
+  .he h2, .he h3, .he p, .he li{direction:rtl;text-align:right;}
+  .he ul{margin:0 22px 16px 0;}
+  footer{padding:48px 0 72px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line);margin-top:24px;}
+  footer a{color:var(--accent2);text-decoration:none;}
+
+  /* Keyboard accessibility. Nothing here changes the page for mouse users. */
+  .skip-link{position:absolute;left:-9999px;top:0;z-index:999;padding:12px 20px;
+    background:var(--accent2);color:var(--bg0);font-weight:700;text-decoration:none;
+    border-radius:0 0 10px 0;}
+  .skip-link:focus{left:0;}
+  :focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:4px;}
+  main:focus{outline:none;}
+</style>
+<script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to the main content</a>
+<div class="wrap">
+
+  <header class="top">
+    <div class="crumb"><a href="index.html">Granular Volume</a> / Accessibility</div>
+    <h1>Accessibility Statement</h1>
+    <p class="dek">This app exists for people who find ordinary volume too loud. A website that sells it should not be hard to use. Here is exactly where this one stands, including the parts that are not finished.</p>
+    <p class="meta">Applies to <b>granularvolume.com</b> &middot; Published September 7, 2026 &middot; Last reviewed September 7, 2026</p>
+  </header>
+
+<main id="main" tabindex="-1">
+  <article>
+
+    <p class="lead-p">Granular Volume is made by one developer. That is not an excuse for an inaccessible site, but it does shape how this statement is written: everything below was tested rather than assumed, and where something has not been tested it says so.</p>
+
+    <h2>The standard we aim at</h2>
+    <p>This website aims to meet <b>WCAG 2.1 level AA</b>, the conformance level referenced by Israeli Standard 5568 and by the European Accessibility Act.</p>
+    <p><b>Conformance status: partially conformant.</b> Partially conformant means most of the standard is met and some parts are not yet. We are not claiming full conformance, because that claim has not been earned by a formal audit.</p>
+
+    <h2>What has been done, and verified</h2>
+    <p>Checked on September 7, 2026, page by page, across all pages of this site:</p>
+    <ul>
+      <li>Every image carries a text alternative.</li>
+      <li>Body text sits at a contrast ratio of about 17.8:1 against its background, and secondary text at about 7.7:1. Both exceed the AA requirement of 4.5:1, and both meet AAA.</li>
+      <li>Every page declares its language, including the German, Spanish and French pages, so a screen reader pronounces them correctly.</li>
+      <li>Headings run in order, with a single first-level heading per page, so a screen reader can be used to navigate by structure.</li>
+      <li>Every page has a "skip to the main content" link as its first keyboard stop, in the language of that page.</li>
+      <li>Every page has a main landmark, so assistive technology can jump straight to the content.</li>
+      <li>Keyboard focus is always visible, as a high-contrast outline around whatever is focused.</li>
+      <li>The site is plain HTML and CSS. It works without JavaScript, it reflows to any window size, and text can be enlarged with the browser's own zoom without content being lost.</li>
+      <li>Nothing on the site moves, flashes, plays automatically or times out.</li>
+    </ul>
+
+    <h2>Known limitations, stated plainly</h2>
+    <p>These are the parts we know are not finished. If one of them stands between you and something you need, write to us and we will send you that content in a form that works for you.</p>
+    <ul>
+      <li><b>No formal audit.</b> The checks above were done by the developer, not by an independent accessibility auditor, and not with a full assistive-technology test matrix.</li>
+      <li><b>Screen readers have not been tested end to end.</b> The structural work that screen readers rely on is in place, but no full pass has been done with NVDA, JAWS or VoiceOver.</li>
+      <li><b>The brand purple used on buttons</b> reaches a contrast ratio of about 4.45:1. That satisfies AA for large text and interface components, and it is not used for small body text, but it does not reach AA for small text.</li>
+      <li><b>Videos on the site are embedded from YouTube</b> and are used as illustration. Captions on them are provided by YouTube rather than authored by us, and no audio description track exists. Nothing on this site depends on a video to be understood.</li>
+      <li><b>Pages in German, Spanish and French</b> received the same structural work as the English pages, but their text has not been reviewed by a native speaker for plain-language clarity.</li>
+    </ul>
+
+    <h2>About the app itself</h2>
+    <p>This statement covers the website. The Android app is a separate piece of software, and honesty is worth more here than a reassuring sentence:</p>
+    <ul>
+      <li>The app's on-screen controls carry spoken labels for TalkBack, including the close button, the information button, the mute button, the louder control and each volume step.</li>
+      <li><b>The app has not been formally audited for accessibility, and it has not been fully tested with TalkBack in real use.</b> We are not claiming it is accessible.</li>
+      <li>If you use a screen reader or a switch device and the app does not work for you, please tell us. That is a bug report we want, and it will be treated as one.</li>
+    </ul>
+
+    <div class="callout">
+      <h2>Found something that does not work?</h2>
+      <p>Tell us and we will fix it, or get you the content another way in the meantime. Say what page you were on, what you were trying to do, and what happened. If you can, mention the browser and any assistive technology you use, because it makes the problem far quicker to reproduce.</p>
+      <ul class="kv">
+        <li><b>Email:</b> <a href="mailto:rotemzus@gmail.com">rotemzus@gmail.com</a></li>
+        <li><b>Responsible person:</b> Rotem Zusman, developer and accessibility contact for this site.</li>
+        <li><b>We will acknowledge your message within 10 business days</b> and tell you what we intend to do about it and by when.</li>
+        <li><b>If you need content in another form</b> while a problem is being fixed, ask, and we will send it as plain text or in whatever format suits you.</li>
+      </ul>
+      <p>Email is the accessible channel for everything here. There is no phone queue, no form to fight with, and no account to create.</p>
+    </div>
+
+    <h2>How this statement is kept honest</h2>
+    <p>It was prepared on September 7, 2026 after an actual review of this site, not from a template. It is reviewed when the site changes materially and at least once a year. Every page added to this site is expected to carry the same skip link, main landmark and visible focus indicator described above.</p>
+    <p>If we ever claim full conformance here, it will be because an audit was done and can be pointed at.</p>
+
+    <div class="he" lang="he" dir="rtl">
+      <h2>הצהרת נגישות</h2>
+      <p>אתר זה, granularvolume.com, שואף לעמוד בהנחיות <b>WCAG 2.1 ברמה AA</b>, שהן הרמה שאליה מפנה התקן הישראלי ת"י 5568.</p>
+      <p><b>מצב ההתאמה: התאמה חלקית.</b> חלק ניכר מהדרישות מתקיים וחלק עדיין לא. איננו טוענים להתאמה מלאה, משום שלא בוצע ביקורת נגישות פורמלית.</p>
+      <h3>מה נבדק ותוקן, נכון ל־7 בספטמבר 2026</h3>
+      <ul>
+        <li>לכל תמונה יש טקסט חלופי.</li>
+        <li>ניגודיות הטקסט הראשי היא כ־17.8:1 והמשני כ־7.7:1, מעל הנדרש ברמה AA.</li>
+        <li>בכל דף מוגדרת שפת הדף, כולל הדפים בגרמנית, ספרדית וצרפתית.</li>
+        <li>מבנה הכותרות תקין והיררכי, וניתן לנווט לפיו בקורא מסך.</li>
+        <li>בכל דף קיים קישור דילוג לתוכן הראשי, והוא תחנת המקלדת הראשונה.</li>
+        <li>בכל דף קיים אזור תוכן ראשי מסומן, וסימון פוקוס נראה לעין בניווט מקלדת.</li>
+        <li>האתר בנוי HTML ו־CSS בלבד, עובד ללא JavaScript, ומאפשר הגדלת טקסט בדפדפן ללא אובדן תוכן.</li>
+        <li>אין באתר תוכן נע, מהבהב, מתנגן אוטומטית או מוגבל בזמן.</li>
+      </ul>
+      <h3>מגבלות ידועות</h3>
+      <ul>
+        <li>לא בוצעה ביקורת נגישות על ידי גורם חיצוני.</li>
+        <li>לא בוצעה בדיקה מלאה מקצה לקצה עם קוראי מסך.</li>
+        <li>צבע הסגול של המותג, המשמש בכפתורים בלבד, מגיע לניגודיות של כ־4.45:1: מתאים לרכיבי ממשק ולטקסט גדול, לא לטקסט קטן.</li>
+        <li>סרטונים באתר מוטמעים מיוטיוב וכתוביותיהם אינן מופקות על ידינו. אין תוכן באתר שהבנתו תלויה בסרטון.</li>
+        <li>ההצהרה מתייחסת לאתר. <b>אפליקציית האנדרואיד לא נבדקה בביקורת נגישות ולא נבדקה במלואה עם TalkBack</b>, אף שפקדיה נושאים תוויות מדוברות. איננו טוענים שהאפליקציה נגישה.</li>
+      </ul>
+      <h3>פנייה בנושא נגישות</h3>
+      <p>נתקלתם בבעיית נגישות באתר או באפליקציה? נשמח לשמוע ונתקן. אנא ציינו באיזה דף הייתם, מה ניסיתם לעשות ומה קרה, ואם אפשר גם באיזה דפדפן ובאיזו טכנולוגיה מסייעת.</p>
+      <ul class="kv">
+        <li><b>דואר אלקטרוני:</b> <a href="mailto:rotemzus@gmail.com">rotemzus@gmail.com</a></li>
+        <li><b>אחראי הנגישות:</b> רותם זוסמן, מפתח האתר.</li>
+        <li><b>נשיב לפנייתכם בתוך 10 ימי עסקים</b> ונעדכן מה בכוונתנו לעשות ובאיזה לוח זמנים.</li>
+        <li><b>אם דרוש לכם תוכן בפורמט חלופי</b> עד לתיקון, בקשו ונשלח אותו כטקסט פשוט או בכל פורמט שנוח לכם.</li>
+      </ul>
+      <p>הצהרה זו נכתבה ב־7 בספטמבר 2026 לאחר בדיקה בפועל של האתר, ומתעדכנת בכל שינוי מהותי ולפחות אחת לשנה.</p>
+    </div>
+
+  </article>
+</main>
+</div>
+<footer>
+  <div class="wrap">
+    Part of <a href="index.html">Granular Volume</a>, free software under the
+    <a href="https://github.com/Rzuss/granular-volume/blob/main/LICENSE">GNU GPL-3.0</a>.
+    <a href="https://rzuss.github.io/granular-volume-privacy/">Privacy Policy</a> &middot;
+    <a href="https://rzuss.github.io/granular-volume-privacy/terms-of-use.html">Terms of Use</a> &middot;
+    <a href="accessibility.html">Accessibility</a>.
+    <br>
+    This site counts visits with GoatCounter, without cookies or personal data.
+  </div>
+</footer>
+</body>
+</html>
