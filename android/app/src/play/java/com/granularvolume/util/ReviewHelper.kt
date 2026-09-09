@@ -37,13 +37,42 @@ object ReviewHelper {
     private const val MIN_TILE_ACTIVATIONS_BEFORE_ASK = 4
 
     /**
+     * Whether this is a fair moment to ask, on top of the usage thresholds.
+     *
+     * Added 2026-09-09. Until then neither path consulted entitlement at all, so the two
+     * worst possible moments to ask were both reachable:
+     *
+     *  - **Locked.** Someone whose trial has run out opens the app to find out why the dial
+     *    stopped working, and on the third such visit is asked to rate us. A "rate this app"
+     *    card shown to a person who has just lost access is the most reliable way to
+     *    manufacture the one-star review this whole design exists to avoid, and the rating
+     *    is what Google Play's Explore surface feeds on.
+     *  - **The final trial day.** Asking today and locking tomorrow reads as a trick, even
+     *    though the warning itself is honest.
+     *
+     * Everyone else is fair game: a grandfathered user, a buyer, and a trial user with days
+     * still ahead are all being asked while the app is doing exactly what they expect.
+     */
+    private fun isFairMomentToAsk(context: Context): Boolean {
+        if (ProAccess.isTrialExpired(context)) return false
+        if (ProAccess.isOnTrial(context) && Entitlement.daysLeftInTrial(context) <= 1) return false
+        return true
+    }
+
+    /**
      * MainActivity path. Requests a review if this looks like a good moment, then
      * invokes [onDone] once it is safe to continue (finish the activity, etc.)
      * whether or not a review was actually shown.
      */
     fun maybeRequestReview(activity: Activity, onDone: () -> Unit) {
+        // The count is incremented first and unconditionally: it is also one of the prior-use
+        // traces the grandfather decision reads, so it must keep rising even when we choose
+        // not to ask.
         val launches = Prefs.incrementAndGetLaunchCount(activity)
-        if (Prefs.wasReviewFlowRequested(activity) || launches < MIN_LAUNCHES_BEFORE_ASK) {
+        if (Prefs.wasReviewFlowRequested(activity) ||
+            launches < MIN_LAUNCHES_BEFORE_ASK ||
+            !isFairMomentToAsk(activity)
+        ) {
             onDone()
             return
         }
@@ -63,8 +92,11 @@ object ReviewHelper {
      */
     fun reviewIntentIfDue(context: Context): Intent? {
         if (Prefs.wasReviewFlowRequested(context)) return null
+        // Same rule as the activity path: count the activation regardless (it is a prior-use
+        // trace), but never turn it into a prompt at a moment the person is being locked out.
         val activations = Prefs.incrementAndGetTileActivations(context)
         if (activations < MIN_TILE_ACTIVATIONS_BEFORE_ASK) return null
+        if (!isFairMomentToAsk(context)) return null
         return Intent(context, ReviewActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
