@@ -231,9 +231,15 @@ class VolumeControlService : Service() {
                     Intent(applicationContext, InfoSheetActivity::class.java)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
-        overlayManager.onEngaged = { mainHandler.post { maybeLastDayNudge() } }
             }
         )
+        // Wired HERE, after construction, never inside a callback. It sat inside the onInfo
+        // lambda until 2026-09-09, which compiled and meant it was only ever assigned after
+        // the user tapped the info button: the "session already running when the last day
+        // begins" warning (see onOpenedByUser) was dead for anyone driving the app from the
+        // dial. The harness was green over it because A17 reads the countdown by tapping
+        // info, the one action that armed the broken assignment. A21 now covers this path.
+        overlayManager.onEngaged = { mainHandler.post { maybeLastDayNudge() } }
 
         serviceScope.launch(Dispatchers.Default) {
             audioController.initialize()
@@ -388,6 +394,10 @@ class VolumeControlService : Service() {
             Log.i(tag, "Key installed: applying the step that was refused (${pending}dB)")
             coordinator.applyQuiet(pending)
         }
+        // The shade said "Locked" a second ago. Repaint it now rather than on the next
+        // attenuation change, which for a buyer arriving from the info sheet (no pending
+        // step) might not come for hours.
+        updateNotification(audioController.attenuationDb.value)
     }
 
     override fun onDestroy() {
@@ -443,7 +453,11 @@ class VolumeControlService : Service() {
         // nothing works. Locked gets the honest line and a tap that opens the sheet:
         // the notification is the one surface the user sees every single day, so it
         // carries the standing, silent version of the daily reminder.
-        val locked = ProAccess.isTrialExpired(applicationContext)
+        // Same truth the audio gate uses: once this session is open it stays open until the
+        // next start, so a trial that runs out mid-session must not have the shade calling
+        // the control "Locked" while the dial still works. Read-only on purpose (no latch
+        // mutation, no "opened mid-session" log from a notification repaint).
+        val locked = !sessionUnlocked && !ProAccess.isPro(applicationContext)
         val tapTarget = if (locked) InfoSheetActivity::class.java else MainActivity::class.java
         val tapIntent = PendingIntent.getActivity(
             this, 1, Intent(this, tapTarget), PendingIntent.FLAG_IMMUTABLE

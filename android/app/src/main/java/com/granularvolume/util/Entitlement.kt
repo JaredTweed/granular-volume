@@ -56,27 +56,39 @@ object Entitlement {
     // ── trial ───────────────────────────────────────────────────────────────
 
     /**
-     * When the trial started, as a dual anchor.
+     * When the trial started.
      *
-     * The stored timestamp is written the first time we are ever asked. [firstInstallTime] is
-     * asked of the package manager on every call. We take the EARLIER of the two, so clearing
-     * app data cannot buy a fresh week: the install time is still sitting there, untouched by
-     * Clear Data, and it wins.
+     * The stored timestamp, once written, is the answer. It is written the first time we are
+     * ever asked, from a floor the package manager keeps for us: the LATER of
+     * [firstInstallTime] and [lastUpdateTime]. Both survive Clear Data, so clearing app data
+     * still cannot buy a fresh week (the floor is unchanged and is re-read into the store).
+     *
+     * Why the later of the two and not the earlier (which is what shipped in the internal
+     * builds up to 2026-09-09): about half of all installs are never opened. An install from
+     * months ago that is opened for the first time AFTER the gated version arrives has no
+     * prior-use trace, so it is not grandfathered, and anchoring on the original install
+     * date handed it "your seven days are over" on its first ever launch. Anchoring on the
+     * update that brought the gate gives that device the same seven days as anyone else.
+     *
+     * Why the stored value is trusted once present: a stored anchor is always at or after
+     * the floor, so re-taking the minimum could only ever pull an updated install backwards
+     * to its original install date, which is the exact failure above, every time it ran.
+     *
+     * The one case this still does not cover, on purpose: a fresh install that sits unopened
+     * for more than seven days meets an expired trial. Distinguishing it from Clear Data is
+     * impossible offline (both leave no prefs), and the Clear Data defence is worth more.
      */
     private fun trialStart(context: Context): Long {
-        val installedAt = try {
-            context.packageManager.getPackageInfo(context.packageName, 0).firstInstallTime
+        val stored = prefs(context).getLong(KEY_TRIAL_START, 0L)
+        if (stored != 0L) return stored
+        val floor = try {
+            val pi = context.packageManager.getPackageInfo(context.packageName, 0)
+            maxOf(pi.firstInstallTime, pi.lastUpdateTime)
         } catch (_: Exception) {
             0L
         }
-        val stored = prefs(context).getLong(KEY_TRIAL_START, 0L)
-        val anchor = when {
-            stored == 0L && installedAt == 0L -> System.currentTimeMillis()
-            stored == 0L -> installedAt
-            installedAt == 0L -> stored
-            else -> minOf(stored, installedAt)
-        }
-        if (stored != anchor) prefs(context).edit { putLong(KEY_TRIAL_START, anchor) }
+        val anchor = if (floor != 0L) floor else System.currentTimeMillis()
+        prefs(context).edit { putLong(KEY_TRIAL_START, anchor) }
         return anchor
     }
 

@@ -10,9 +10,11 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.granularvolume.service.VolumeControlService
 import com.granularvolume.util.Entitlement
 import com.granularvolume.util.KeyCheck
 import com.granularvolume.util.ProAccess
@@ -38,6 +40,9 @@ class InfoSheetActivity : AppCompatActivity() {
 
     private var dialog: BottomSheetDialog? = null
 
+    /** The state this sheet last rendered, so a resume can tell a purchase from a mere return. */
+    private var lastState: State? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dialog = BottomSheetDialog(this).apply {
@@ -47,10 +52,26 @@ class InfoSheetActivity : AppCompatActivity() {
         }
     }
 
-    /** Returning from Play with the key installed: re-render rather than show stale state. */
+    /**
+     * Returning from Play with the key installed: re-render rather than show stale state, AND
+     * tell the service. This sheet is the only purchase route on trial days 7 to 4 and the
+     * route every locked notification opens, and until 2026-09-09 a purchase made from here
+     * told the service nothing: the audio latch would open on the next dial touch anyway, but
+     * the shade kept saying "Locked" and the buyer got no acknowledgement at all. Same signal
+     * PaywallActivity sends, so the two purchase routes now end identically.
+     */
     override fun onResume() {
         super.onResume()
+        val before = lastState
         dialog?.setContentView(buildSheet())
+        val after = lastState
+        if (after == State.UNLOCKED && before != null && before != State.UNLOCKED) {
+            startService(
+                Intent(this, VolumeControlService::class.java)
+                    .setAction(VolumeControlService.ACTION_KEY_INSTALLED)
+            )
+            Toast.makeText(this, R.string.gv_paywall_unlocked, Toast.LENGTH_LONG).show()
+        }
     }
 
     override fun onDestroy() {
@@ -85,6 +106,7 @@ class InfoSheetActivity : AppCompatActivity() {
 
     private fun buildSheet(): View {
         val st = state()
+        lastState = st
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(ContextCompat.getColor(context, R.color.gv_surface))

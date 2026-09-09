@@ -416,7 +416,11 @@ class OverlayManager(
         // Commit the local highlight only when the step can actually be applied. During a
         // cellular call applyQuiet refuses (and says why), so moving currentStep first would
         // leave the chevron stepping from a position the dial never reached.
-        if (!coordinator.uiState().quietUnavailable) currentStep = step
+        // The same holds for a locked range: applyQuiet refuses and opens the paywall, and
+        // the coordinator's own contract is that the dial never renders a step the device
+        // is not applying. Until 2026-09-09 a refused tap still advanced currentStep here;
+        // invisible today only because render() ignores currentStep outside the quiet zone.
+        if (!coordinator.uiState().quietUnavailable && !coordinator.lockedProvider()) currentStep = step
         coordinator.applyQuiet(STEP_DB[step])
     }
 
@@ -459,9 +463,18 @@ class OverlayManager(
         // Never let the hidden floor step become the selection; -5 dB is the visible top.
         if (s.zoneQuiet) currentStep = dbToStep(s.quietDb).coerceAtMost(QUIET_TOP_VISIBLE)
 
+        // A locked range (trial over, no key) renders every bar at the "unavailable" level
+        // the cellular-call state already uses, so the dial reads as inert instead of as a
+        // live control whose every touch bounces to a sales sheet. The label is left alone on
+        // purpose: it still shows where the user left off, which is what the keep-your-place
+        // rule promises. Added 2026-09-09; before it a locked dial was pixel identical to a
+        // working one.
+        val locked = coordinator.lockedProvider()
+
         // Upper bars: list index 0 = loudest. Fill from the bottom up to the current level.
         for (i in upperBars.indices) {
             val alpha = when {
+                locked                 -> ALPHA_UNAVAILABLE
                 s.zoneQuiet || s.muted -> ALPHA_INACTIVE
                 i == s.upperPos        -> ALPHA_CURRENT
                 i > s.upperPos         -> ALPHA_ACTIVE
@@ -477,6 +490,7 @@ class OverlayManager(
                 // bar is inert. Render them below the ordinary inactive level so the zone
                 // reads as unavailable rather than merely unselected, and the user is not
                 // invited to tap something that can only disappoint.
+                locked                  -> ALPHA_UNAVAILABLE
                 s.quietUnavailable      -> ALPHA_UNAVAILABLE
                 !s.zoneQuiet || s.muted -> ALPHA_INACTIVE
                 i == currentStep        -> ALPHA_CURRENT

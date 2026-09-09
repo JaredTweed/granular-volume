@@ -141,7 +141,19 @@ object Prefs {
             p.getInt(KEY_TILE_ACTIVATIONS, 0) > 0 ||
             p.getFloat(KEY_ATTENUATION_DB, ATTENUATION_DEFAULT) != ATTENUATION_DEFAULT ||
             p.contains(KEY_OVERLAY_X) || p.contains(KEY_OVERLAY_Y) ||
-            p.getInt(KEY_TERMS_ACCEPTED_VERSION, 0) > 0
+            p.getInt(KEY_TERMS_ACCEPTED_VERSION, 0) > 0 ||
+            // Every key below is written by ordinary 1.4.x use and by nothing else. Presence
+            // is the proof, not the value: service_was_running is false after a user stop,
+            // and that user still used the app. Added 2026-09-09 after an audit found a
+            // tile-driven user who never returned to MainActivity, never moved the dial and
+            // predates the consent gate would fail every check above and be locked on day
+            // one with no trial. Note attenuation_db is written as 0.0 on every service
+            // start, and 0.0 == ATTENUATION_DEFAULT, so that clause alone never covered them.
+            p.contains(KEY_SERVICE_WAS_RUNNING) ||
+            p.contains(KEY_QS_TILE_OFFERED) ||
+            p.contains(KEY_LINE_TOOLTIP_SHOWN) ||
+            p.contains(KEY_REVIEW_REQUESTED) ||
+            p.contains(KEY_COLLAPSED)
     }
 
     /** Sticky grandfather verdict. Written once; never flips back to false. */

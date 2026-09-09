@@ -39,7 +39,6 @@ import com.granularvolume.util.ProAccess
 class PaywallActivity : AppCompatActivity() {
 
     private var dialog: BottomSheetDialog? = null
-    private var leavingForStore = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,17 +49,25 @@ class PaywallActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Re-checked on EVERY resume, not only on the first return from the store.
+     *
+     * Until 2026-09-09 this was gated on a one-shot "leavingForStore" flag that was cleared
+     * before the check. A buyer who came back while the key was still downloading (the
+     * ordinary case on mobile data) consumed the flag, saw a sheet still reading "Your seven
+     * days are over", and never got the confirmation or the replay of the refused step. The
+     * gate was designed for the moment it failed in. Checking unconditionally costs two pref
+     * reads and one PackageManager call per resume, and cannot misfire: this sheet only ever
+     * opens on a refused gesture, which requires the range to be locked at that instant.
+     */
     override fun onResume() {
         super.onResume()
-        if (leavingForStore) {
-            leavingForStore = false
-            if (ProAccess.isPro(this)) {
-                serviceAction(VolumeControlService.ACTION_KEY_INSTALLED)
-                Toast.makeText(this, R.string.gv_paywall_unlocked, Toast.LENGTH_LONG).show()
-                dialog?.setOnCancelListener(null)
-                dialog?.dismiss()
-                finish()
-            }
+        if (ProAccess.isPro(this)) {
+            serviceAction(VolumeControlService.ACTION_KEY_INSTALLED)
+            Toast.makeText(this, R.string.gv_paywall_unlocked, Toast.LENGTH_LONG).show()
+            dialog?.setOnCancelListener(null)
+            dialog?.dismiss()
+            finish()
         }
     }
 
@@ -76,7 +83,6 @@ class PaywallActivity : AppCompatActivity() {
     }
 
     private fun openStore() {
-        leavingForStore = true
         try {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$KEY_APP_ID")))
         } catch (_: Exception) {

@@ -1,9 +1,12 @@
-Volume keys now climb smoothly out of the quiet zone: once your presses have
-eased the extra attenuation away, further presses raise the volume normally
-instead of being pulled back down.
+Seven days of everything, then one payment, once. New installs get the complete
+app for seven days, after that it asks for the Full Range Key, a one-time purchase
+on Google Play. No subscription, nothing that renews.
 
-If something else keeps raising the volume, a second raise by you now wins.
+Already using the app? Nothing changes for you, permanently. Every step you had
+stays yours.
 
-On a regular phone call the quiet steps are shown dimmed. Android carries call
-audio on a path that runs no audio effects. App calls such as WhatsApp keep the
-full range on most phones.
+Also in this release: volume keys climb smoothly out of the quiet zone, a second
+raise by you wins over anything else raising the volume, and on a regular phone
+call the quiet steps are shown dimmed, because Android carries call audio on a
+path that runs no audio effects. App calls such as WhatsApp keep the full range
+on most phones.
