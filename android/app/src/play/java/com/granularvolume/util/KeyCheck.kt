@@ -51,6 +51,14 @@ object KeyCheck {
             }
         } catch (_: PackageManager.NameNotFoundException) {
             return false
+        } catch (t: Exception) {
+            // Anything else the package manager can throw (a dead system binder under memory
+            // pressure is the documented one) must read as "no key", never as a crash: this is
+            // called from the overlay's render path and from the notification builder, both
+            // inside the foreground service. Locked for one session is recoverable; a crashed
+            // service on the phone of someone who paid is not (2026-09-10 review).
+            Log.w(TAG, "Key lookup failed, treating as not installed: ${t.message}")
+            return false
         }
 
         val signatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {

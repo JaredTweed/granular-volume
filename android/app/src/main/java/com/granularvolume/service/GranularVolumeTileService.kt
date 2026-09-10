@@ -8,6 +8,7 @@ import android.service.quicksettings.TileService
 import com.granularvolume.MainActivity
 import com.granularvolume.util.PermissionHelper
 import com.granularvolume.util.Prefs
+import com.granularvolume.util.ProAccess
 import com.granularvolume.util.ReviewHelper
 
 /**
@@ -29,6 +30,16 @@ class GranularVolumeTileService : TileService() {
 
     override fun onClick() {
         super.onClick()
+
+        // This tile is an entry point into the app, and it WRITES prefs before the service it
+        // starts gets to run: startForegroundService only queues the service's onCreate on this
+        // same main thread, so reviewIntentIfDue below (tile_activations = 1) lands first, and
+        // the service's own grandfather decision would then read that write as prior use. The
+        // decision has to be taken here, first, from a still-untouched prefs file. Reached on a
+        // fresh install only by someone who granted the overlay permission from system Settings
+        // and added the tile without ever opening the app (2026-09-10 review). Idempotent, so
+        // the ordinary case, where MainActivity or the service already decided, costs one read.
+        ProAccess.evaluateGrandfather(applicationContext)
 
         if (!PermissionHelper.canDrawOverlays(applicationContext)) {
             launchMainActivity()
