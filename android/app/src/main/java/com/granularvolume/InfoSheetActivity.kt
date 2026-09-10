@@ -10,7 +10,6 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -70,7 +69,7 @@ class InfoSheetActivity : AppCompatActivity() {
                 Intent(this, VolumeControlService::class.java)
                     .setAction(VolumeControlService.ACTION_KEY_INSTALLED)
             )
-            Toast.makeText(this, R.string.gv_paywall_unlocked, Toast.LENGTH_LONG).show()
+            // No toast: the service announces the purchase itself (see PaywallActivity.onResume).
         }
     }
 

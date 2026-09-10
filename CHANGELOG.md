@@ -2,7 +2,7 @@
 
 All notable changes to Granular Volume are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## 1.5.0 (versionCode 29)
+## 1.5.0 (versionCode 30)
 
 **If you already use this app, nothing changes for you.** Every step you have today stays yours,
 free, on this device.

@@ -131,6 +131,8 @@ class OverlayManager(
         private const val FLASH_IN_MS = 90L
         private const val FLASH_HOLD_MS = 60L
         private const val FLASH_OUT_MS = 220L
+        /** Gap between neighbouring bars in the purchase wave; the whole ladder takes ~0.9 s. */
+        private const val SWEEP_STAGGER_MS = 28L
 
         private const val COLOR_LABEL_NORMAL = 0x88FFFFFF.toInt()
         private const val COLOR_MUTED_ACCENT = 0xFFFF5A5F.toInt()
@@ -469,7 +471,7 @@ class OverlayManager(
         // purpose: it still shows where the user left off, which is what the keep-your-place
         // rule promises. Added 2026-09-09; before it a locked dial was pixel identical to a
         // working one.
-        val locked = coordinator.lockedProvider()
+        val locked = coordinator.lockedDisplayProvider()
 
         // Upper bars: list index 0 = loudest. Fill from the bottom up to the current level.
         for (i in upperBars.indices) {
@@ -591,6 +593,57 @@ class OverlayManager(
             val pulses = if (target == FullRangeCoordinator.FlashTarget.QUIET_FIRST) 2 else 1
             pulseBar(view, bar, pulses)
         }, FLASH_DELAY_MS)
+    }
+
+    /**
+     * The key just arrived. Called by the service ONCE per purchase, after it has put the
+     * audio where it belongs.
+     *
+     * The dial wakes from its idle fade, confirms with one haptic, and runs one wave of light up
+     * the WHOLE ladder, bottom to top, then hands every bar back to render(), which settles on the
+     * step now selected. This is legibility, not decoration: until 2026-09-10 a buyer who had
+     * just paid was looking at the same dim, inert ladder the lock had drawn, and the only way to
+     * learn that the purchase worked was to touch it. Found on the owner's own phone.
+     *
+     * The whole ladder, not "up to the current step", because the first version did exactly that
+     * and the screenshots showed it: for a buyer landing on -30 dB, the deepest step and the most
+     * natural place for this app's audience, the sweep was ONE bar. The message of the moment is
+     * "the full range is open", so the wave covers all of it, whatever the position.
+     *
+     * Muted: no sweep, because a ladder that lights up and settles to all-inactive reads as a
+     * glitch. Reduced motion: truth, wake and haptic only.
+     */
+    fun celebrateUnlock() {
+        val view = overlayView ?: return
+        render(view)
+        wake(view)
+        confirmHaptic(view)
+        val s = coordinator.uiState()
+        if (s.muted || !animationsEnabled()) { scheduleIdleFade(view); return }
+
+        // Bottom to top: quiet steps from -30 dB up to the last visible one, then the upper rungs
+        // from the floor rung up to the loudest (upper list index 0 is the loudest).
+        val quiet = collectStepBars(view)
+        val ladder = ArrayList<View>()
+        for (i in 0..QUIET_TOP_VISIBLE) ladder.add(quiet[i])
+        for (i in upperBars.lastIndex downTo 0) ladder.add(upperBars[i])
+        // Each bar rises, holds, and falls back, so the light travels. postDelayed, never
+        // setStartDelay: a ViewPropertyAnimator keeps its start delay for every later animate() on
+        // that view, so render()'s own animations would inherit it.
+        ladder.forEachIndexed { k, bar ->
+            view.postDelayed({
+                if (overlayView !== view) return@postDelayed
+                bar.animate().alpha(ALPHA_CURRENT).setDuration(FLASH_IN_MS).withEndAction {
+                    bar.postDelayed({
+                        if (overlayView === view) bar.animate().alpha(ALPHA_INACTIVE).setDuration(FLASH_OUT_MS).start()
+                    }, FLASH_HOLD_MS)
+                }.start()
+            }, FLASH_DELAY_MS + k * SWEEP_STAGGER_MS)
+        }
+        val settleAt = FLASH_DELAY_MS + ladder.size * SWEEP_STAGGER_MS + FLASH_IN_MS + FLASH_HOLD_MS + FLASH_OUT_MS
+        view.postDelayed({
+            if (overlayView === view) { render(view); scheduleIdleFade(view) }
+        }, settleAt)
     }
 
     private fun pulseBar(root: View, bar: View, pulses: Int) {

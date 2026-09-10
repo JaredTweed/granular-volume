@@ -68,6 +68,19 @@ class FullRangeCoordinator(
      */
     var lockedProvider: () -> Boolean = { false }
 
+    /**
+     * Read-only twin of [lockedProvider], for RENDERING only.
+     *
+     * [lockedProvider] is the gesture gate, and the service's answer to it opens the session
+     * latch the moment the key is present. That is right for a gesture (the tap that finds the
+     * key installed should simply work) and wrong for a repaint: a render that happened to run
+     * between the key's installation and the service handling it would open the latch silently,
+     * the service would then read the session as already open, and the buyer would not be
+     * returned to their place (2026-09-10). Repaints ask this instead, which mutates nothing.
+     * Defaults to the gate, so an unwired instance behaves exactly as before.
+     */
+    var lockedDisplayProvider: () -> Boolean = { lockedProvider() }
+
     /** A locked gesture. Carries the quiet step the user reached for, or null for upper/mute. */
     var onLockedInteraction: ((pendingQuietStepDb: Float?) -> Unit)? = null
 

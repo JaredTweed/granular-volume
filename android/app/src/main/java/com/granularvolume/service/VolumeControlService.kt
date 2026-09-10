@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PatternMatcher
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -30,6 +31,7 @@ import com.granularvolume.audio.FullRangeCoordinator
 import com.granularvolume.audio.StreamVolumeController
 import com.granularvolume.overlay.OverlayManager
 import com.granularvolume.util.Entitlement
+import com.granularvolume.util.KeyCheck
 import com.granularvolume.util.Prefs
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +41,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 /**
  * Foreground service that owns the AudioController and OverlayManager lifecycle.
@@ -62,6 +65,8 @@ class VolumeControlService : Service() {
          * The key app just appeared. Sent by the paywall sheet when it returns from the
          * store and finds the key installed, so ownership takes effect in that second
          * rather than at the next service start.
+         * Since 2026-09-10 this is the FALLBACK door: the service hears the install itself
+         * (see keyInstalledReceiver), whatever screen the buyer is on.
          */
         const val ACTION_KEY_INSTALLED = "com.granularvolume.ACTION_KEY_INSTALLED"
 
@@ -72,6 +77,9 @@ class VolumeControlService : Service() {
          * app must never make.
          */
         const val EXTRA_FROM_BOOT = "com.granularvolume.EXTRA_FROM_BOOT"
+
+        /** The paid key app. Must match KeyCheck and the play manifest's <queries> entry. */
+        private const val KEY_APP_PACKAGE = "com.granularvolume.key"
 
         // Hidden-but-stable system broadcast + extras (no public constants exist for these).
         private const val VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION"
@@ -97,6 +105,13 @@ class VolumeControlService : Service() {
     private var pendingQuietStepDb: Float? = null
 
     private var sessionUnlocked = false
+
+    /**
+     * Whether this session has already answered the key. Seeded at start from what is
+     * installed, so a key that was there before the control started is never announced again
+     * (the cold return has its own one-time card in MainActivity, harness A27).
+     */
+    private var keyWelcomed = false
     private lateinit var overlayManager: OverlayManager
 
     /**
@@ -113,6 +128,25 @@ class VolumeControlService : Service() {
             val from = intent.getIntExtra(EXTRA_PREV_VOLUME_STREAM_VALUE, to)
             if (to < 0) return
             coordinator.onExternalVolumeChange(stream, from, to)
+        }
+    }
+
+    /**
+     * The key app was installed. Listened for HERE, by the service that owns the dial, because
+     * the dial is what the buyer is looking at.
+     *
+     * Until 2026-09-10 the only signal was ACTION_KEY_INSTALLED, sent by the paywall or the
+     * info sheet when one of them RESUMED after the store. A buyer who pressed Home after the
+     * install, or tapped Open on the key, resumed neither, and kept looking at the dim ladder
+     * the lock had drawn until they happened to touch it. Found on the owner's own phone. The
+     * package broadcast arrives when the install completes, whatever the buyer does next. It
+     * needs the play manifest's <queries> entry for the key, the same one KeyCheck relies on.
+     */
+    private val keyInstalledReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != Intent.ACTION_PACKAGE_ADDED) return
+            if (intent.data?.schemeSpecificPart != KEY_APP_PACKAGE) return
+            mainHandler.post { onKeyArrived("package-added") }
         }
     }
 
@@ -189,11 +223,15 @@ class VolumeControlService : Service() {
         // through the gate.
         ProAccess.evaluateGrandfather(applicationContext)
         sessionUnlocked = ProAccess.isPro(applicationContext)
+        keyWelcomed = KeyCheck.isKeyInstalled(applicationContext)
         audioController.proProvider = ::unlockedThisSession
 
         streamVolumeController = StreamVolumeController(applicationContext)
         coordinator = FullRangeCoordinator(applicationContext, audioController, streamVolumeController)
         coordinator.lockedProvider = { !unlockedThisSession() }
+        // Repaints must never open the latch (see lockedDisplayProvider). The same read-only
+        // rule the notification uses.
+        coordinator.lockedDisplayProvider = { !sessionUnlocked && !ProAccess.isPro(applicationContext) }
         coordinator.onLockedInteraction = { pendingStep ->
             mainHandler.post {
                 pendingQuietStepDb = pendingStep
@@ -265,6 +303,15 @@ class VolumeControlService : Service() {
             IntentFilter(VOLUME_CHANGED_ACTION),
             androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
         )
+        androidx.core.content.ContextCompat.registerReceiver(
+            this,
+            keyInstalledReceiver,
+            IntentFilter(Intent.ACTION_PACKAGE_ADDED).apply {
+                addDataScheme("package")
+                addDataSchemeSpecificPart(KEY_APP_PACKAGE, PatternMatcher.PATTERN_LITERAL)
+            },
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         am.registerAudioDeviceCallback(deviceCallback, mainHandler)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && modeListener != null) {
@@ -293,7 +340,7 @@ class VolumeControlService : Service() {
                 stopRequestedByUser = true
                 stopSelf()
             }
-            ACTION_KEY_INSTALLED -> onKeyInstalled()
+            ACTION_KEY_INSTALLED -> onKeyArrived("activity")
             // A plain start with a real Intent is a person or the boot receiver turning
             // the control on; a null Intent is only ever the system resurrecting a
             // killed sticky service, which no one asked for and no sheet may answer.
@@ -319,6 +366,10 @@ class VolumeControlService : Service() {
         if (!ProAccess.isPro(applicationContext)) return false
         sessionUnlocked = true
         Log.i(tag, "Full range opened mid-session (key installed)")
+        // A gesture got here before the package broadcast was handled. The gesture's own level
+        // stands; the welcome still has to happen, so schedule it (it finds the session open and
+        // skips the landing). Skipped when onKeyArrived is the caller: it is already here.
+        if (!keyWelcomed) mainHandler.post { onKeyArrived("gesture") }
         return true
     }
 
@@ -367,42 +418,81 @@ class VolumeControlService : Service() {
     }
 
     /**
-     * The key has arrived. Opens the latch for this session, then honours the gesture that
-     * sent the user to the store in the first place.
+     * The key has arrived, through one of three doors: the package broadcast (the normal one,
+     * see [keyInstalledReceiver]), the paywall or info sheet resuming after the store, or a
+     * gesture that found the key already installed. Whichever comes first does the work; the
+     * others find it done.
      *
-     * Why re-apply anything at all: the gate held the gain at 0 dB for the whole locked
-     * session, so the purchase by itself changes nothing audible, and "I paid and nothing
-     * happened" is the worst possible first second of ownership.
-     *
-     * Routed through the coordinator rather than straight at the controller, because
-     * applyQuiet is what also pins the media stream and sets the zone. Calling the
-     * controller alone would apply the gain while the dial still rendered the upper zone.
-     *
-     * A buyer who arrived from the upper zone or from mute has no pending step: they keep
-     * the level they can already see, now unlocked, and the place they left off comes back
-     * on the next start, when initialize() re-applies the persisted level through an open
-     * gate. That restore needs no bookkeeping here; it falls out of the persistence rule.
+     *  1. LANDING, only if the session was still locked. The gate held the gain at 0 dB for the
+     *     whole locked session, so the purchase by itself changes nothing audible, and "I paid
+     *     and nothing happened" is the worst possible first second of ownership. See
+     *     [landAfterUnlock]: the refused step if there was one, otherwise the stored place, and
+     *     never louder than the locked state it replaces. Every public surface promises "every
+     *     step comes back exactly where you left it"; until 2026-09-10 that only happened at the
+     *     next service start.
+     *  2. WELCOME for a buyer: one toast and the dial lighting up. Not for a grandfathered user
+     *     buying the key as support, for whom nothing was unlocked. The live welcome also counts
+     *     as the purchase acknowledgement, so MainActivity's one-time card does not repeat it.
+     *  3. The notification is repainted: it said "Locked" a second ago.
      */
-    private fun onKeyInstalled() {
-        if (!unlockedThisSession()) {
-            Log.w(tag, "Key-installed signal received, but ProAccess still reports locked")
+    private fun onKeyArrived(source: String) {
+        if (keyWelcomed) return
+        if (!KeyCheck.isKeyInstalled(applicationContext)) {
+            // A key signed by anyone else. KeyCheck has already logged the rejection.
+            Log.w(tag, "Key signal ($source), but no valid key installed: ignoring")
             return
         }
+        val wasLocked = !sessionUnlocked
+        keyWelcomed = true
+        unlockedThisSession()
+        Log.i(tag, "Key arrived ($source), session was ${if (wasLocked) "locked" else "open"}")
+        if (wasLocked) landAfterUnlock() else pendingQuietStepDb = null
+        if (!Entitlement.isGrandfathered(applicationContext)) {
+            Prefs.setUnlockAcknowledged(applicationContext)
+            Toast.makeText(applicationContext, R.string.gv_paywall_unlocked, Toast.LENGTH_LONG).show()
+            overlayManager.celebrateUnlock()
+        }
+        updateNotification(audioController.attenuationDb.value)
+    }
+
+    /**
+     * Puts the audio where the buyer asked, or where they left it. Never louder.
+     *
+     * Never louder, because: while locked the gain sat at 0 dB and the hardware wherever the
+     * buyer's own keys had left it. The landing goes through [FullRangeCoordinator.applyQuiet],
+     * which only ever LOWERS the hardware (lowerTo) and applies a gain at or below 0 dB. The two
+     * exits below are the only ways that could break: a muted stream (applyQuiet cancels mute
+     * first, restoring the pre-mute level, so a landing would UNMUTE the buyer) and a cellular
+     * call (applyQuiet refuses there and says so; the place comes back after the call). A locked
+     * session cannot be muted today, since a locked mute is refused and mute is not persisted, so
+     * that exit guards a future path rather than a tested one.
+     *
+     * Only a real quiet step counts as a place. The stored level also holds upper-zone curve
+     * remainders, a few dB of fine-tuning between hardware rungs, and applying one as a quiet
+     * step would drop the buyer to the floor for a fraction of a step, which is not where they
+     * were. Those buyers, and anyone who never used the quiet zone, stay exactly where they are.
+     */
+    private fun landAfterUnlock() {
         val pending = pendingQuietStepDb
         pendingQuietStepDb = null
-        if (pending != null) {
-            Log.i(tag, "Key installed: applying the step that was refused (${pending}dB)")
-            coordinator.applyQuiet(pending)
+        if (coordinator.isMuted) { Log.i(tag, "Key landing skipped: muted"); return }
+        if (coordinator.uiState().quietUnavailable) { Log.i(tag, "Key landing skipped: cellular call"); return }
+        val stored = Prefs.getAttenuation(applicationContext)
+        val place = stored.takeIf { s -> OverlayManager.STEP_DB.any { it < 0f && abs(it - s) < 0.01f } }
+        val target = pending ?: place
+        if (target == null) {
+            Log.i(tag, "Key landing: no quiet place to return to (stored ${stored}dB), staying put")
+            coordinator.syncZoneToAppliedGain()
+            return
         }
-        // The shade said "Locked" a second ago. Repaint it now rather than on the next
-        // attenuation change, which for a buyer arriving from the info sheet (no pending
-        // step) might not come for hours.
-        updateNotification(audioController.attenuationDb.value)
+        Log.i(tag, "Key landing on ${if (pending != null) "the refused step" else "the stored place"} (${target}dB)")
+        coordinator.applyQuiet(target)
     }
 
     override fun onDestroy() {
         Log.i(tag, "Service stopping (userRequested=$stopRequestedByUser)")
         runCatching { unregisterReceiver(volumeChangeReceiver) }
+        runCatching { unregisterReceiver(keyInstalledReceiver) }
         runCatching {
             val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
             am.unregisterAudioDeviceCallback(deviceCallback)

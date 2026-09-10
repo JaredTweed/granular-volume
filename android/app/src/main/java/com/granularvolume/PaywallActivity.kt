@@ -10,7 +10,6 @@ import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -28,10 +27,10 @@ import com.granularvolume.util.ProAccess
  * Lifecycle contract with the service:
  *  - Dismissed without buying (Not now, tap outside, back, swipe): nothing to undo.
  *  - CTA opens the key app's Play listing; this activity stays alive underneath
- *    (no noHistory), so returning from the store lands back HERE. onResume then
- *    re-checks ProAccess: key present -> ACTION_KEY_INSTALLED, which unlocks the
- *    session and re-applies the step that was refused. That is the anti-"paid and
- *    nothing happened" mechanism.
+ *    (no noHistory), so returning from the store lands back HERE. The service has
+ *    usually handled the purchase already, from the package broadcast (it unlocks the
+ *    session and re-applies the step that was refused); onResume re-checks ProAccess
+ *    and sends ACTION_KEY_INSTALLED as the fallback, then closes.
  *
  * No price is rendered in-app: the store listing shows the local price, so nothing
  * here can go stale.
@@ -63,8 +62,11 @@ class PaywallActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (ProAccess.isPro(this)) {
+            // Since 2026-09-10 the service learns of the key from the package broadcast the
+            // moment its install completes, and announces the purchase itself (one toast, the
+            // dial lights up, the refused step lands). This signal is the fallback door and a
+            // no-op when that already happened. No toast here, or a buyer would get two.
             serviceAction(VolumeControlService.ACTION_KEY_INSTALLED)
-            Toast.makeText(this, R.string.gv_paywall_unlocked, Toast.LENGTH_LONG).show()
             dialog?.setOnCancelListener(null)
             dialog?.dismiss()
             finish()
