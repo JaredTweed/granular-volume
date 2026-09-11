@@ -62,7 +62,7 @@
     {
       "@type": "Question",
       "name": "Werden auch Anrufe, Wecker und Benachrichtigungen leiser?",
-      "acceptedAnswer": {"@type": "Answer", "text": "Ja. Medien, Anrufe, Klingeltöne, Benachrichtigungen und der Wecker laufen alle über denselben gemischten Ausgabepfad und werden mitgesenkt. Tastentöne und UI-Klicks dagegen nicht, siehe unten."}
+      "acceptedAnswer": {"@type": "Answer", "text": "Medien, Klingeltöne, Benachrichtigungen und der Wecker laufen alle über denselben gemischten Ausgabepfad und werden mitgesenkt. Anrufe über Apps wie WhatsApp ebenfalls, sofern das Handy sie über diesen Ausgabepfad abspielt; das ist je nach Gerät verschieden. Normale Telefonanrufe nicht: Android führt die Mobilfunkstimme auf jedem Handy über einen eigenen Pfad, den keine App erreicht. Tastentöne und UI-Klicks dagegen nicht, siehe unten."}
     },
     {
       "@type": "Question",
@@ -302,7 +302,7 @@
       <dd>Ja. Die Audioeffekt-Schnittstelle von Android reicht dafür aus. Kein Root, kein ADB, keine Änderung an Systemdateien.</dd>
 
       <dt>Werden auch Anrufe, Wecker und Benachrichtigungen leiser?</dt>
-      <dd>Ja. Medien, Anrufe, Klingeltöne, Benachrichtigungen und Wecker laufen über denselben gemischten Ausgabepfad und werden mitgesenkt.</dd>
+      <dd>Medien, Klingeltöne, Benachrichtigungen und der Wecker laufen alle über denselben gemischten Ausgabepfad und werden mitgesenkt. Anrufe über Apps wie WhatsApp ebenfalls, sofern das Handy sie über diesen Ausgabepfad abspielt; das ist je nach Gerät verschieden. Normale Telefonanrufe nicht: Android führt die Mobilfunkstimme auf jedem Handy über einen eigenen Pfad, den keine App erreicht.</dd>
 
       <dt>Warum werden Tastentöne nicht leiser?</dt>
       <dd>Sie laufen über einen separaten Pfad mit niedriger Latenz, der Audioeffekte bewusst überspringt. Das ist eine Grenze von Android, keine App kann sie umgehen. Tastentöne lassen sich aber in den Toneinstellungen separat abschalten.</dd>

@@ -41,7 +41,7 @@
     {"@type":"Question","name":"Pourquoi le volume minimum de mon téléphone est-il encore trop fort ?","acceptedAnswer":{"@type":"Answer","text":"Parce que la dernière marche avant le silence n'est pas un volume faible, c'est une fraction fixe du volume maximal, choisie par Android puis ajustée par le fabricant. Entre cette marche et le silence complet, il n'y a rien. Sur un téléphone réglé pour un usage en extérieur, une chambre calme sera toujours trop bruyante."}},
     {"@type":"Question","name":"Comment baisser le volume sous le minimum sans root ?","acceptedAnswer":{"@type":"Answer","text":"En travaillant à un autre niveau que le curseur de volume. Android permet à une application d'attacher un effet audio à la sortie mélangée de l'appareil, après le mixage et avant le matériel. Un gain appliqué là n'est pas limité par la position du curseur. Cela ne demande ni root, ni ordinateur, ni ADB."}},
     {"@type":"Question","name":"Les applications qui ajoutent des paliers de volume résolvent-elles le problème ?","acceptedAnswer":{"@type":"Answer","text":"Elles résolvent un problème différent, celui des paliers trop espacés. C'est très utile quand le niveau souhaité tombe entre deux marches. C'est une question distincte de celle du plancher, car ces fonctions passent par le volume système d'Android, exactement comme les touches."}},
-    {"@type":"Question","name":"Est-ce que cela fonctionne aussi pour les appels et les alarmes ?","acceptedAnswer":{"@type":"Answer","text":"Les alarmes, les sonneries et les notifications sont concernées, comme la musique et les vidéos. Pour les appels, cela dépend du téléphone : certains modèles font passer la voix par un circuit matériel qu'aucune application n'atteint. Personne ne peut vous garantir le résultat sur votre modèle précis."}},
+    {"@type":"Question","name":"Est-ce que cela fonctionne aussi pour les appels et les alarmes ?","acceptedAnswer":{"@type":"Answer","text":"Alarmes, sonneries et notifications, oui, comme la musique et les vidéos. Les appels passés par une application comme WhatsApp aussi, si le téléphone les fait passer par la même sortie que les médias, ce qui dépend du modèle. Les appels téléphoniques classiques, non : sur tous les téléphones, Android fait passer la voix mobile par un circuit séparé qu'aucune application n'atteint. Personne ne peut vous garantir le résultat sur votre modèle précis."}},
     {"@type":"Question","name":"Pourquoi les sons du clavier restent-ils forts ?","acceptedAnswer":{"@type":"Answer","text":"Les clics du clavier et les sons d'interface passent par le chemin audio à faible latence d'Android, qui ignore volontairement tout traitement parce que les effets ajoutent du retard. Aucune application travaillant sur la sortie mélangée ne peut les atteindre. Ils se règlent séparément dans les paramètres de son du système."}},
     {"@type":"Question","name":"Faut-il un ordinateur ou des autorisations spéciales ?","acceptedAnswer":{"@type":"Answer","text":"Non. Il faut l'autorisation d'affichage par-dessus les autres applications et les autorisations audio standard. Pas de root, pas d'ADB, pas d'ordinateur."}}
   ]
@@ -207,7 +207,7 @@
       <li>Le limiteur de volume agit sur le maximum, pas sur le minimum.</li>
       <li>Des paliers plus fins répondent à un besoin différent, tout aussi légitime.</li>
       <li>Descendre plus bas suppose de travailler sur la sortie mélangée de l'appareil.</li>
-      <li>Musique, vidéos, sonneries, notifications et alarmes sont concernées. Les appels dépendent du modèle. Le clavier, jamais.</li>
+      <li>Musique, vidéos, sonneries, notifications et alarmes sont concernées. Les appels via une application, selon le modèle ; les appels classiques, jamais. Le clavier, jamais.</li>
     </ul>
 
     <div class="callout">
@@ -233,7 +233,7 @@
       <dd>Elles résolvent le problème des paliers trop espacés, ce qui est utile mais différent. Elles passent par le volume système d'Android, exactement comme les touches.</dd>
 
       <dt>Est-ce que cela fonctionne pour les appels et les alarmes ?</dt>
-      <dd>Alarmes, sonneries et notifications, oui, comme la musique et les vidéos. Pour les appels, cela dépend du téléphone : certains modèles font passer la voix par un circuit matériel qu'aucune application n'atteint.</dd>
+      <dd>Alarmes, sonneries et notifications, oui, comme la musique et les vidéos. Les appels passés par une application comme WhatsApp aussi, si le téléphone les fait passer par la même sortie que les médias, ce qui dépend du modèle. Les appels téléphoniques classiques, non : sur tous les téléphones, Android fait passer la voix mobile par un circuit séparé qu'aucune application n'atteint.</dd>
 
       <dt>Pourquoi les sons du clavier restent-ils forts ?</dt>
       <dd>Ils passent par le chemin à faible latence, qui ignore tout traitement audio par conception. Ils se règlent séparément dans les paramètres de son du système.</dd>
