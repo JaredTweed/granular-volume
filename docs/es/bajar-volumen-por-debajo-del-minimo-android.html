@@ -61,7 +61,7 @@
     {
       "@type": "Question",
       "name": "¿También baja las llamadas, la alarma y las notificaciones?",
-      "acceptedAnswer": {"@type": "Answer", "text": "Sí. El contenido multimedia, las llamadas, los tonos, las notificaciones y la alarma pasan todos por la misma ruta de salida mezclada y bajan con ella. Los tonos del teclado y los sonidos de la interfaz no, como se explica más abajo."}
+      "acceptedAnswer": {"@type": "Answer", "text": "El contenido multimedia, los tonos, las notificaciones y la alarma pasan por la misma ruta de salida mezclada y bajan con ella. Las llamadas de apps como WhatsApp también, si el teléfono las reproduce por esa misma ruta, lo que depende del modelo. Las llamadas telefónicas normales no: en cualquier teléfono, Android lleva la voz de la red móvil por una ruta aparte que ninguna app alcanza. Los tonos del teclado y los sonidos de la interfaz no, como se explica más abajo."}
     },
     {
       "@type": "Question",
@@ -301,7 +301,7 @@
       <dd>Sí. La interfaz de efectos de audio de Android es suficiente. Sin root, sin ADB y sin modificar archivos del sistema.</dd>
 
       <dt>¿También baja las llamadas, la alarma y las notificaciones?</dt>
-      <dd>Sí. Multimedia, llamadas, tonos, notificaciones y alarma pasan por la misma ruta de salida mezclada y bajan con ella.</dd>
+      <dd>El contenido multimedia, los tonos, las notificaciones y la alarma pasan por la misma ruta de salida mezclada y bajan con ella. Las llamadas de apps como WhatsApp también, si el teléfono las reproduce por esa misma ruta, lo que depende del modelo. Las llamadas telefónicas normales no: en cualquier teléfono, Android lleva la voz de la red móvil por una ruta aparte que ninguna app alcanza.</dd>
 
       <dt>¿Por qué no bajan los tonos del teclado?</dt>
       <dd>Usan una ruta separada de baja latencia que se salta los efectos de audio a propósito. Es un límite de Android y ninguna aplicación puede sortearlo. Eso sí, se pueden desactivar por separado en los ajustes de sonido.</dd>
