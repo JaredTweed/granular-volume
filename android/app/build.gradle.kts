@@ -31,8 +31,14 @@ android {
         applicationId = "granularvolume.com"
         minSdk = 28
         targetSdk = 36          // Play requires API 36 (Android 16) for updates from Aug 31, 2026
-        versionCode = 30
+        versionCode = 31
         versionName = "1.5.0"
+        // Grandfather cutoff, 2026-12-01T00:00:00Z. Overridable ONLY for the harness
+        // (-PgvGateCutoffMs=...); a release build must be made without the property.
+        buildConfigField(
+            "long", "GATE_CUTOFF_MS",
+            "${project.findProperty("gvGateCutoffMs") ?: "1796083200000"}L"
+        )
     }
 
     // Distribution flavors: "play" keeps the Play-only in-app review prompt;

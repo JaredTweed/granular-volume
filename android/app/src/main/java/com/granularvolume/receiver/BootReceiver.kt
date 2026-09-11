@@ -6,16 +6,24 @@ import android.content.Intent
 import android.util.Log
 import com.granularvolume.service.VolumeControlService
 import com.granularvolume.util.Prefs
+import com.granularvolume.util.ProAccess
 
 /**
- * Receives BOOT_COMPLETED and restarts the service if it was running before shutdown.
+ * Receives BOOT_COMPLETED and restarts the service if it was running before shutdown,
+ * unless the dial is locked: a locked control has nothing to apply.
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED &&
             intent.action != "android.intent.action.QUICKBOOT_POWERON") return
 
-        if (Prefs.wasServiceRunning(context)) {
+        // The one-time grandfather decision runs before the lock is read: after an update
+        // from 1.4.x this receiver can be the first entry point, and a long-time user must
+        // not look locked only because nothing has decided yet. It writes no prefs first.
+        ProAccess.evaluateGrandfather(context)
+        // A locked control does not come back on its own after a restart; the user reopens
+        // it and meets the purchase sheet then.
+        if (Prefs.wasServiceRunning(context) && !ProAccess.isTrialExpired(context)) {
             Log.i("GranularVolume:Boot", "Restarting VolumeControlService after boot")
             context.startForegroundService(
                 Intent(context, VolumeControlService::class.java)
@@ -23,6 +31,8 @@ class BootReceiver : BroadcastReceiver() {
                     // sheet stays quiet: a boot is not the user opening the control.
                     .putExtra(VolumeControlService.EXTRA_FROM_BOOT, true)
             )
+        } else if (Prefs.wasServiceRunning(context)) {
+            Log.i("GranularVolume:Boot", "Not restarting after boot: the dial is locked")
         }
     }
 }

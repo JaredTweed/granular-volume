@@ -1,15 +1,17 @@
 package com.granularvolume.util
 
 import android.content.Context
+import com.granularvolume.BuildConfig
 
 /**
  * Single source of truth for "does this device have the full quiet range".
  *
  * Three independent ways in, any one is enough:
  *
- *  1. **Grandfathered** — the device used the app before the gated version arrived.
+ *  1. **Grandfathered** — the app was installed or used before the gated version arrived.
  *     Decided ONCE, on the first run of the gated version, from prior-use traces in
- *     prefs ([Prefs.hasAnyPriorUse]), then stored sticky in [Entitlement]. Existing
+ *     prefs ([Prefs.hasAnyPriorUse]) or from the install having come from an earlier
+ *     version ([installedBeforeGate]), then stored sticky in [Entitlement]. Existing
  *     users keep the full range forever; the promise that made them install is never
  *     withdrawn.
  *
@@ -42,8 +44,27 @@ object ProAccess {
             legacyGrandfathered = Prefs.isGrandfathered(context),
         )
         if (Entitlement.wasGrandfatherEvaluated(context)) return
-        Entitlement.setGrandfathered(context, Prefs.hasAnyPriorUse(context))
+        // Prior use is read first, before anything below can touch prefs.
+        val priorUse = Prefs.hasAnyPriorUse(context)
+        val installedBefore = installedBeforeGate(context) // null: PackageManager failed
+        // Never turn a failed lookup into a permanent lock: decide at the next entry point.
+        if (!priorUse && installedBefore == null) return
+        Entitlement.setGrandfathered(context, priorUse || installedBefore == true)
         Entitlement.setGrandfatherEvaluated(context)
+    }
+
+    /**
+     * True when this installation came from an earlier version (an update, not a fresh
+     * install) AND its first install predates a deliberately late cutoff. The promise is
+     * "installed before 1.5.0", so an error here may grandfather a few extra installs and
+     * must never lock out one that was promised.
+     */
+    private fun installedBeforeGate(context: Context): Boolean? = try {
+        val pi = context.packageManager.getPackageInfo(context.packageName, 0)
+        pi.firstInstallTime < pi.lastUpdateTime &&
+            pi.firstInstallTime < BuildConfig.GATE_CUTOFF_MS
+    } catch (_: Exception) {
+        null
     }
 
     /**
