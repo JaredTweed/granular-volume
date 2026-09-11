@@ -107,7 +107,7 @@ Most apps in this space solve the opposite problem, or a different problem that 
 | Mechanism | Independent output-gain effect, applied underneath the existing volume steps | Often remaps or subdivides the same step range you already have |
 | Touches volume buttons? | No takeover: buttons and panel keep working; in the quiet zone their presses fold into the dial's finer scale | Sometimes overrides or intercepts them |
 | Setup | One dial, drag it, done | Frequently an equalizer, presets, or an account |
-| Cost model | Open source, no ads, no tracking | Often paid, ad-supported, or both |
+| Cost model | Open source, no ads, no tracking; one payment after a free week | Often ad supported or subscription based |
 
 The distinction matters because "more steps" and "a lower floor" are not the same fix, though they overlap more than is usually admitted. A longer step scale does put its first step lower on Android's attenuation curve: on one Android 16 configuration measured in August 2026, going from 15 steps to 100 was worth about 5 dB. What it cannot do is pass the bottom of that curve, which is fixed regardless of step count, and past roughly 100 steps the extra ones sit at mute rather than adding anything. Only attenuation applied *underneath* that floor actually changes the quietest sound the device can produce.
 

@@ -39,7 +39,7 @@
     {"@type":"Question","name":"Does it lower ringtone and notification volume too?","acceptedAnswer":{"@type":"Answer","text":"Yes. Ringtones, notification sounds, alarms and media are all affected. Each of those was tested directly by playing the sound and moving the dial down through its steps, and the level drops every time."}},
     {"@type":"Question","name":"Why can nothing lower my keyboard clicks and UI touch sounds?","acceptedAnswer":{"@type":"Answer","text":"Those particular sounds take a different route through Android. Keyboard taps and interface clicks are played on a dedicated low-latency audio path that deliberately skips audio post-processing, because processing adds delay and instant response is the entire reason that path exists. Any app that lowers volume by attaching an effect to the system output is therefore unable to reach them. This is a boundary in Android itself rather than a missing feature, so treat any app that promises to quiet keyboard clicks with suspicion."}},
     {"@type":"Question","name":"Does it need root, ADB or a computer?","acceptedAnswer":{"@type":"Answer","text":"No. It uses Android's own audio-effect framework, needs only a display-over-other-apps permission and standard audio permissions, and requires no root, no ADB and no computer."}},
-    {"@type":"Question","name":"Is it free and private?","acceptedAnswer":{"@type":"Answer","text":"Free to install, and the first seven days are the complete app with nothing held back. After that, keeping the control takes one payment, once. Nothing renews and there is no subscription to cancel. No ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0, and the F-Droid build has every step at no charge."}}
+    {"@type":"Question","name":"Is it free and private?","acceptedAnswer":{"@type":"Answer","text":"Free to install, and the first seven days after you install are the complete app with nothing held back. After that, keeping the control takes one payment, once. Nothing renews and there is no subscription to cancel. No ads, no account, no subscription, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0, and the F-Droid build has every step at no charge."}}
   ]
 }
 </script>
@@ -272,7 +272,7 @@
       <dt>Does it need root, ADB or a computer?</dt>
       <dd>No. It uses Android's own audio-effect framework, needs only a display-over-other-apps permission and standard audio permissions, and requires no root, ADB or computer.</dd>
       <dt>Is it free and private?</dt>
-      <dd>Free to install, and the first seven days are the complete app with nothing held back. After that, keeping the control takes one payment, once. Nothing renews and there is no subscription to cancel. No ads, no account, no in-app purchases, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0, and the F-Droid build has every step at no charge.</dd>
+      <dd>Free to install, and the first seven days after you install are the complete app with nothing held back. After that, keeping the control takes one payment, once. Nothing renews and there is no subscription to cancel. No ads, no account, no subscription, and no internet permission at all, so it cannot send data anywhere. Open source under GPL-3.0, and the F-Droid build has every step at no charge.</dd>
     </dl>
   </article>
 
