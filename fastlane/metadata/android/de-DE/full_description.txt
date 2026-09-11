@@ -8,7 +8,7 @@ LEISER ALS IHR GERÄT ERLAUBT
 Die meisten Lautstärke-Apps machen lauter. Granular Volume ist für das andere Ende gebaut: Es senkt die Lautstärke unter die niedrigste Stufe, die die Hardware erlaubt, über Androids eigene Audio-Engine, auf Handys und Tablets. Ohne Root. Kein Ersatz des System-Lautstärkefelds. Keine Werbung, kein Konto, überhaupt keine Internet-Berechtigung. Die leise Zone ist das Herz der App, und derselbe Regler deckt auch den normalen Bereich ab.
 
 WENN IHRE LAUTSTÄRKETASTEN NICHT MEHR FUNKTIONIEREN
-Tasten nutzen sich ab, klemmen oder werden von einer Hülle gedrückt. Oberhalb der Linie, die das Minimum Ihres Geräts markiert, stellt der Regler die normale Systemlautstärke ein und ersetzt so die Tasten: nach oben ziehen für lauter, nach unten für leiser, in gleichmäßigen 5-dB-Schritten aus der Lautstärkekurve Ihres eigenen Geräts. Unterhalb der Linie geht es weiter, leiser als das Handy erlaubt. Eine Stummschaltung betrifft nur Medien, Ihre Wecker bleiben hörbar.
+Tasten nutzen sich ab, klemmen oder werden von einer Hülle gedrückt. Oberhalb der Linie, die das Minimum Ihres Geräts markiert, stellt der Regler die normale Systemlautstärke ein und ersetzt so die Tasten: nach oben ziehen für lauter, nach unten für leiser, in gleichmäßigen 5-dB-Schritten aus der Lautstärkekurve Ihres eigenen Geräts. Unterhalb der Linie geht es weiter, leiser als das Handy erlaubt. Die Stummschaltung lässt den Wecker in Ruhe, aber die leisen Stufen senken auch Wecker und Klingeltöne.
 
 AUCH FÜR TABLETS
 Tablets haben oft ein noch höheres Minimum als Handys. Granular Volume funktioniert auf Android-Tablets genauso, mit demselben leisen Boden.
@@ -20,7 +20,7 @@ SCHNELLEINSTELLUNGEN-KACHEL
 Nach unten wischen, einmal tippen. Fügen Sie Granular Volume Ihren Schnelleinstellungen hinzu und schalten Sie das Overlay ein oder aus, ohne die App zu öffnen.
 
 FÜR LEISE MOMENTE GEMACHT
-- App-Anrufe wie WhatsApp auf den meisten Handys. Normale Telefonate laufen über einen eigenen Weg, den keine App absenken kann
+- App-Anrufe wie WhatsApp, sofern das Handy sie über den Medienausgang abspielt; das ist je nach Gerät verschieden. Normale Telefonate laufen über einen eigenen Weg, den keine App absenken kann
 - Empfindliche In-Ears und Kopfhörer, bei denen schon Stufe 1 zu laut ist
 - Tablet-Lautsprecher und -Kopfhörer, deren Minimum oft noch lauter ist als am Handy
 - Weißes Rauschen oder Schlaflieder für ein schlafendes Baby, kaum hörbar

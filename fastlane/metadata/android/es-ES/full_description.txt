@@ -8,7 +8,7 @@ MÁS BAJO DE LO QUE TU DISPOSITIVO PERMITE
 La mayoría de las apps de volumen están hechas para subir. Granular Volume está hecha para el otro extremo: reduce el volumen por debajo del paso más bajo que permite el hardware, usando el motor de audio de Android, en móviles y tablets por igual. Sin root. No reemplaza el panel de volumen del sistema. Sin anuncios, sin cuenta, sin permiso de internet en absoluto. La zona silenciosa es el corazón de la app, y el mismo deslizador cubre también tu rango normal.
 
 CUANDO TUS BOTONES DE VOLUMEN NO FUNCIONAN
-Los botones se desgastan, se endurecen o quedan presionados por una funda. Por encima de la línea que marca el mínimo de tu dispositivo, el control ajusta el volumen normal del sistema y sustituye a los botones: arrastra hacia arriba para subir, hacia abajo para bajar, en pasos uniformes de 5 dB construidos a partir de la curva de volumen de tu propio dispositivo. Por debajo de la línea sigue bajando, más silencioso de lo que el móvil permite. Un control de silencio apaga el contenido multimedia sin tocar tus alarmas.
+Los botones se desgastan, se endurecen o quedan presionados por una funda. Por encima de la línea que marca el mínimo de tu dispositivo, el control ajusta el volumen normal del sistema y sustituye a los botones: arrastra hacia arriba para subir, hacia abajo para bajar, en pasos uniformes de 5 dB construidos a partir de la curva de volumen de tu propio dispositivo. Por debajo de la línea sigue bajando, más silencioso de lo que el móvil permite. El silencio no toca las alarmas, pero los pasos silenciosos también bajan alarmas y tonos de llamada.
 
 TAMBIÉN PARA TABLETS
 Las tablets suelen tener un mínimo aún más alto que los móviles. Granular Volume funciona igual en tablets Android, con el mismo suelo silencioso.
@@ -20,7 +20,7 @@ ACCESO DIRECTO EN AJUSTES RÁPIDOS
 Desliza hacia abajo, toca una vez. Añade Granular Volume a tu panel de ajustes rápidos y activa o desactiva el control sin abrir la app.
 
 HECHO PARA MOMENTOS SILENCIOSOS
-- Llamadas de apps como WhatsApp en la mayoría de móviles. Las llamadas normales usan una ruta que ninguna app puede bajar
+- Llamadas de apps como WhatsApp, si el móvil las reproduce por la salida multimedia, lo que depende del modelo. Las llamadas normales usan una ruta que ninguna app puede bajar
 - IEM sensibles y auriculares de alta sensibilidad, donde incluso el paso 1 es demasiado
 - Altavoces y auriculares de tablet, cuyo mínimo suele ser aún más alto que en el móvil
 - Ruido blanco o nanas para un bebé dormido, apenas audibles
