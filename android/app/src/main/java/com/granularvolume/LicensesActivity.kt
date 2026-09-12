@@ -98,7 +98,7 @@ class LicensesActivity : AppCompatActivity() {
         text = s
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
         setTypeface(typeface, Typeface.BOLD)
-        setTextColor(color(R.color.gv_accent))
+        setTextColor(color(R.color.gv_accent_text))
         space(top = 26, bottom = 8)
     }
 

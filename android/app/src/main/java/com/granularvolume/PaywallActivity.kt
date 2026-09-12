@@ -7,11 +7,14 @@ import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.granularvolume.service.VolumeControlService
 import com.granularvolume.util.ProAccess
@@ -96,6 +99,22 @@ class PaywallActivity : AppCompatActivity() {
 
     // ── sheet UI, programmatic — matches the app palette, adds no layout file ──
 
+    /**
+     * 1.4.4: the sheet's content is built as a plain LinearLayout, so at a large system font
+     * scale it grew past the sheet and the actions at the bottom were simply unreachable.
+     * A NestedScrollView keeps the bottom-sheet drag working while letting the content scroll.
+     */
+    private fun View.inScroller(): View = NestedScrollView(this@PaywallActivity).apply {
+        isFillViewport = true
+        addView(
+            this@inScroller,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+    }
+
     private fun buildSheet(): View {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -117,10 +136,12 @@ class PaywallActivity : AppCompatActivity() {
             setOnClickListener { openStore() }
         }.topPad(18, fill = true))
 
-        root.addView(text(R.string.gv_paywall_terms, 11f, colorRes = R.color.gv_text_muted).apply {
+        root.addView(text(R.string.gv_paywall_terms, 13f, colorRes = R.color.gv_accent_text).apply {
             gravity = Gravity.CENTER
+            setPadding(0, dp(10), 0, dp(10))
+            asButtonForAccessibility()
             setOnClickListener { openUrl(URL_TERMS) }
-        }.topPad(8, fill = true))
+        }.topPad(4, fill = true))
 
         root.addView(TextView(this).apply {
             text = getString(R.string.gv_paywall_not_now)
@@ -128,11 +149,26 @@ class PaywallActivity : AppCompatActivity() {
             setTypeface(typeface, Typeface.BOLD)
             setTextColor(ContextCompat.getColor(context, R.color.gv_text_secondary))
             gravity = Gravity.CENTER
-            setPadding(0, dp(12), 0, dp(4))
+            setPadding(0, dp(12), 0, dp(12))
+            asButtonForAccessibility()
             setOnClickListener { finish() }
         }.topPad(6, fill = true))
 
-        return root
+        return root.inScroller()
+    }
+
+    /**
+     * A TextView with a click listener is announced by TalkBack as plain text, so a reader is
+     * never told it can be activated. Both of this sheet's text actions carry the Button role.
+     */
+    private fun View.asButtonForAccessibility() {
+        isFocusable = true
+        accessibilityDelegate = object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = Button::class.java.name
+            }
+        }
     }
 
     private fun openUrl(url: String) {

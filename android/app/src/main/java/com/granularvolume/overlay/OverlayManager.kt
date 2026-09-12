@@ -152,6 +152,9 @@ class OverlayManager(
     /** Quiet-zone step currently selected (meaningful only while zoneQuiet). */
     private var currentStep = STEP_DB.size - 1
 
+    /** Last value announced to a screen reader, so an unchanged re-render stays silent. */
+    private var lastSpokenLevel: String? = null
+
     private val upperBars = ArrayList<View>()
 
     private val idleFadeRunnable = Runnable {
@@ -260,10 +263,14 @@ class OverlayManager(
             (totalPx - gapPx * (count - 1)) / count
         )
 
+        // One name for the whole rung stack. Each bar previously carried the SAME description,
+        // so a screen reader read "Volume level" once per rung before reaching anything useful.
+        container.contentDescription = container.context.getString(R.string.gv_upper_bar_desc)
+
         for (i in 0 until count) {
             val bar = View(container.context).apply {
                 background = container.context.getDrawable(R.drawable.bg_step_bar)
-                contentDescription = container.context.getString(R.string.gv_upper_bar_desc)
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
                 isClickable = false
                 isFocusable = false
             }
@@ -511,6 +518,22 @@ class OverlayManager(
             else        -> "${s.percent}%"
         }
         label.setTextColor(if (s.muted) COLOR_MUTED_ACCENT else COLOR_LABEL_NORMAL)
+
+        // 4.1.3: the level is the app's whole output, and until 1.5.0 a screen reader was told
+        // nothing when it moved. The label is a polite live region carrying a SPOKEN form of the
+        // value ("Volume minus 15 dB, below the device minimum"), not the terse visible one.
+        // Guarded on the previous value so a re-render with the same level stays silent, and so a
+        // drag does not queue one announcement per frame.
+        val spoken = when {
+            s.muted     -> context.getString(R.string.gv_label_desc_muted)
+            s.zoneQuiet -> context.getString(R.string.gv_label_desc_quiet, formatDb(STEP_DB[currentStep]))
+            else        -> context.getString(R.string.gv_label_desc_normal, s.percent)
+        }
+        label.accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+        if (spoken != lastSpokenLevel) {
+            lastSpokenLevel = spoken
+            label.contentDescription = spoken
+        }
 
         // 1.4.4 option B mute bar: state_selected drives the red fill in bg_mute_bar;
         // glyph and text invert onto it. Announced to TalkBack as a STATE via the

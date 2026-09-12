@@ -8,10 +8,12 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.granularvolume.service.VolumeControlService
 import com.granularvolume.util.Entitlement
@@ -103,6 +105,22 @@ class InfoSheetActivity : AppCompatActivity() {
 
     // -- sheet ----------------------------------------------------------------
 
+    /**
+     * 1.4.4: the sheet's content is built as a plain LinearLayout, so at a large system font
+     * scale it grew past the sheet and the actions at the bottom were simply unreachable.
+     * A NestedScrollView keeps the bottom-sheet drag working while letting the content scroll.
+     */
+    private fun View.inScroller(): View = NestedScrollView(this@InfoSheetActivity).apply {
+        isFillViewport = true
+        addView(
+            this@inScroller,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+        )
+    }
+
     private fun buildSheet(): View {
         val st = state()
         lastState = st
@@ -171,7 +189,7 @@ class InfoSheetActivity : AppCompatActivity() {
         }
 
         root.addView(legalRow().topPad(18, fill = true))
-        return root
+        return root.inScroller()
     }
 
     /** Terms, Privacy and the licences screen, side by side and always reachable. */
@@ -194,7 +212,7 @@ class InfoSheetActivity : AppCompatActivity() {
     private fun link(label: String, action: () -> Unit): TextView = TextView(this).apply {
         text = label
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-        setTextColor(ContextCompat.getColor(context, R.color.gv_accent))
+        setTextColor(ContextCompat.getColor(context, R.color.gv_accent_text))
         setPadding(dp(10), dp(8), dp(10), dp(8))
         setOnClickListener { action() }
     }

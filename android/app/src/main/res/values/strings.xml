@@ -24,6 +24,11 @@
     <string name="gv_line_tooltip">below the line:\nquieter than your\ndevice minimum</string>
     <string name="gv_upper_bar_desc">Volume level</string>
     <string name="gv_label_muted">MUTED</string>
+    <!-- Spoken forms of the level label. The visible label is deliberately terse; a screen
+         reader needs the unit and the direction spelled out. -->
+    <string name="gv_label_desc_muted">Media muted</string>
+    <string name="gv_label_desc_quiet">Volume %1$s, below the device minimum</string>
+    <string name="gv_label_desc_normal">Volume %1$d percent</string>
     <string name="gv_mute_bar_label">MUTE</string>
     <string name="gv_mute_bar_label_active">MUTED</string>
 
