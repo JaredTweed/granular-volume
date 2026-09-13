@@ -1,10 +1,3 @@
-# PRICE-CLAIM NOTE (2026-08-25). This file used to render the word "Free" into the
-# footer of every screenshot, into the feature graphic's badge row, and into
-# screenshot 8's headline. Under the unlock-key model that claim became unqualified
-# and misleading, and no text search could ever have found it, because it is pixels.
-# The price statement now lives ONLY in the store description, where there is room to
-# state the boundary exactly. Do not put a price word back into an image: an image
-# cannot carry the qualifier that makes it true.
 """
 Granular Volume - Play Store marketing assets v4.
 Philosophy: "Quiet Instrument" (see DESIGN-PHILOSOPHY.md).
@@ -20,10 +13,43 @@ Fixes over v3:
 No em dashes in any caption.
 Outputs: feature_graphic_1024x500.png, screenshot_1..6.png
 """
-import os, math
+import os, math, sys
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
+# PRICE-CLAIM NOTE (2026-08-25, revised 2026-09-01). The 08-25 version removed every price word
+# from the images, because an unqualified "Free" became false under the paid unlock and no text
+# search can find a claim that is pixels. The trial model (owner, 2026-08-28) then made a price word
+# true again, but ONLY per store: "7 days free, then one payment" is true on Google Play and false on
+# F-Droid, where "Free" stays true forever. So every price word below is variant-aware. Never render a
+# price word outside the VARIANT switch, and regenerate BOTH sets whenever a claim changes.
+#
+# --- Distribution variant -----------------------------------------------------
+# The same eight screenshots feed BOTH stores, and the two stores no longer sell the
+# same thing: the Play build is a seven-day trial followed by a one-time unlock, while
+# the F-Droid build is free and complete, permanently. Every price word therefore has to
+# be variant-aware, or one of the two listings is lying in its pixels.
+#
+#   python gen_marketing_v5.py            -> fdroid wording, written next to this file
+#   python gen_marketing_v5.py play       -> Play wording, written to ./play/
+#
+# Nothing else differs between the two sets.
+VARIANT = (sys.argv[1] if len(sys.argv) > 1 else "fdroid").lower()
+if VARIANT not in ("play", "fdroid"):
+    raise SystemExit("variant must be 'play' or 'fdroid'")
+PLAY = VARIANT == "play"
+
+# The price line under the wordmark on every screenshot, and the badge row on the
+# feature graphic.
+FOOTER_CLAIM = "7 days free   .   No ads   .   Open source" if PLAY else                "Free   .   No ads   .   Open source"
+BADGES = ["7 days free", "No ads", "Open source"] if PLAY else ["Free", "No ads", "Open source"]
+# Screenshot 8: its headline and its first bullet are both price claims.
+TRUST_HEAD = ["Private, open,", "no subscriptions"] if PLAY else ["Free, private, open"]
+TRUST_FIRST = "7 days free, then one payment" if PLAY else "Completely free"
+
 OUT = os.path.dirname(os.path.abspath(__file__))
+if PLAY:
+    OUT = os.path.join(OUT, "play")
+    os.makedirs(OUT, exist_ok=True)
 FONTS = r"C:\Windows\Fonts"
 SS = 2  # supersample factor
 
@@ -455,7 +481,7 @@ def header(d, lines, sub):
 def footer(d):
     d.text((W // 2, H - s(82)), "Granular Volume", font=semi(32), fill=(244, 246, 251, 220),
            anchor="mm")
-    d.text((W // 2, H - s(44)), "No ads   .   No tracking   .   Open source", font=reg(26),
+    d.text((W // 2, H - s(44)), FOOTER_CLAIM, font=reg(26),
            fill=(199, 203, 236, 150), anchor="mm")
 
 def build(idx, lines, sub, content_fn, accent=VIOLET):
@@ -594,14 +620,18 @@ def c_noninvasive(d, sx, sy, sw, sh):
 
 def c_trust(d, sx, sy, sw, sh):
     dim_app(d, sx, sy, sw, sh)
-    items = ["No advertisements", "No data collected",
+    items = [TRUST_FIRST, "No advertisements", "No data collected",
              "No internet access", "Open source"]
     lx = sx + int(sw * 0.13)
     cy = sy + int(sh * 0.15)
     fs = 32
     maxw = sw - int(sw * 0.26)
+    # ONE size for the whole list, chosen by its longest line. Sizing each item on its own
+    # let the price bullet render visibly smaller than the four beside it, which reads as a
+    # rendering fault rather than as emphasis.
+    f = min((fit_font(d, t, reg, fs, maxw - s(50)) for t in items),
+            key=lambda ft: ft.size)
     for text in items:
-        f = fit_font(d, text, reg, fs, maxw - s(50))
         r = s(15)
         ccx, ccy = lx + r, cy + r
         d.ellipse([ccx - r, ccy - r, ccx + r, ccy + r], fill=(52, 211, 153, 55))
@@ -768,7 +798,7 @@ def make_feature():
     d.text((tx, s(292)), "Quieter than your phone or tablet allows.", font=reg(28), fill=SOFT, anchor="lm")
     by = s(346)
     bx = tx
-    for badge in ["No ads", "No tracking", "Open source"]:
+    for badge in BADGES:
         bw = int(d.textlength(badge, font=semi(23))) + s(40)
         d.rounded_rectangle([bx, by, bx + bw, by + s(46)], radius=s(23),
                             fill=(108, 99, 255, 45), outline=(108, 99, 255, 160), width=s(1))
@@ -854,6 +884,6 @@ build(6, ["Always within reach"],
       "Drag it anywhere. Close it with one tap.", c_drag)
 build(7, ["One tap from", "Quick Settings"],
       "Turn it on or off without opening the app", c_qstile)
-build(8, ["Private by design"],
+build(8, TRUST_HEAD,
       "No ads. No tracking. GPL-3.0.", c_trust)
 print("Done. Assets saved to:", OUT)

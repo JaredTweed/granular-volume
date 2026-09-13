@@ -205,7 +205,7 @@ def make_cta():
     draw_text_center(d, W // 2, 916,
                      "The whole volume range, on your screen.", SEMI(42), MUTED, ls=1)
     # feature pills row
-    pills = ["Free", "No ads", "No tracking", "Open source"]
+    pills = ["7 days free", "No ads", "No tracking", "Open source"]
     pf = SEMI(34)
     gap = 22
     widths = [d.textlength(p, font=pf) + 56 for p in pills]
@@ -215,6 +215,8 @@ def make_cta():
         cx = x + w / 2
         draw_pill(d, cx, 1050, p, pf, TXT, ACCENT + (120,), padx=28, pady=14)
         x += w + gap
+    # the price, said once, plainly: the trial-model deal under the pills
+    draw_text_center(d, W // 2, 1128, "Then one payment, once. No subscription.", SEMI(38), MUTED, ls=1)
     # store line
     draw_text_center(d, W // 2, 1300, "Get it on", SEMI(40), MUTED, ls=1)
     draw_text_center(d, W // 2, 1360, "Google Play  &  F-Droid", BOLD(58), TXT, ls=1)
