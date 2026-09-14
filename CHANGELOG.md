@@ -2,26 +2,33 @@
 
 All notable changes to Granular Volume are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## 1.5.0 (versionCode 31)
+## 1.5.0 (versionCode 33)
 
-**If you already use this app, nothing changes for you.** Every step you have today stays yours,
-free, on this device.
+**If you installed the app before this version, nothing changes for you.** The complete app stays
+yours, free, permanently.
 
 ### Added
-- An optional one-time unlock for the deeper quiet steps, sold as a separate companion app on
-  Google Play. New installs get volume control across the normal range and the first step below
-  the device minimum free and permanently; the steps below that unlock with the purchase.
-- Tapping a locked step plays it for real for thirty seconds, so you hear exactly what you would
-  be buying before you decide. The level then eases back to the free range over about a second,
-  timed by how far it has to climb so it is a fade rather than a jump.
+- On Google Play, new installs get the complete app for seven days. After that, keeping the control
+  takes a one-time purchase of a separate companion app, Full Range Key. There is no subscription and
+  nothing renews. The app counts down the last days, locks the dial when the week is up, and your
+  device's own volume keys keep working throughout.
+- The dial speaks its level to screen readers, for example "Volume minus 15 dB, below the device
+  minimum", so changing the volume no longer depends on seeing the screen.
 - An open source licences screen, reachable from the main screen, listing every bundled component
   with its licence and the full Apache-2.0 text.
 
 ### Changed
-- Terms of Use updated for the optional purchase; the app asks you to accept them once.
+- On a regular phone call the quiet steps show dimmed, because Android runs no audio effects on
+  cellular call audio. Calls in apps such as WhatsApp keep both zones where the phone plays them as
+  media.
+- Text and buttons meet the WCAG 2.1 AA contrast minimum, the upgrade and access sheets scroll at
+  large font sizes, and their text actions are announced as buttons.
+- The main screen now describes what the app does: "Quieter than your phone or tablet allows".
+- Terms of Use updated for the trial and the optional purchase; the app asks you to accept them once.
 
 ### Unchanged
-- The F-Droid build includes every step at no charge, permanently, with no purchase feature in it.
+- The F-Droid build includes everything at no charge, permanently, with no trial and no purchase
+  feature in it.
 - No ads, no tracking, no accounts, and still no internet permission in any version.
 
 ## 1.4.8 (versionCode 28)
