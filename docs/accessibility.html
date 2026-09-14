@@ -67,6 +67,37 @@
   }
 </style>
 <script data-goatcounter="https://granularvolume.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<style id="gv-a11y-style">
+  /* Accessibility button and panel, self-hosted (a11y.js). No third-party code, no cookies. */
+  .gv-a11y-fab{position:fixed;left:16px;bottom:16px;z-index:1000;width:52px;height:52px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;background:#5046E5;color:#fff;border:2px solid #fff;
+    box-shadow:0 6px 18px rgba(0,0,0,.45);cursor:pointer;padding:0;text-decoration:none;}
+  .gv-a11y-fab svg{width:30px;height:30px;fill:currentColor;}
+  .gv-a11y-fab:focus-visible,.gv-a11y-btn:focus-visible,.gv-a11y-link:focus-visible{outline:3px solid #22d3ee;outline-offset:3px;}
+  .gv-a11y-panel{position:fixed;left:16px;bottom:78px;z-index:1000;width:min(300px,calc(100vw - 32px));
+    max-height:calc(100vh - 100px);overflow:auto;background:#161232;color:#f4f6ff;border:1px solid rgba(255,255,255,.35);
+    border-radius:14px;padding:14px;box-shadow:0 12px 32px rgba(0,0,0,.55);font:16px/1.4 "Segoe UI",system-ui,sans-serif;text-align:left;}
+  .gv-a11y-title{font-weight:800;font-size:17px;margin:0 0 10px;}
+  .gv-a11y-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .gv-a11y-label{flex:1;}
+  .gv-a11y-value{min-width:46px;text-align:center;}
+  .gv-a11y-btn{display:block;width:100%;min-height:44px;margin:0 0 8px;padding:8px 12px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.35);background:#232a55;color:#f4f6ff;font:inherit;text-align:left;cursor:pointer;}
+  .gv-a11y-step{width:52px;margin:0;text-align:center;font-weight:700;}
+  .gv-a11y-btn[aria-pressed="true"]{background:#5046E5;border-color:#fff;}
+  .gv-a11y-btn[aria-pressed="true"]::after{content:" \2713";}
+  .gv-a11y-btn:disabled{opacity:.45;cursor:default;}
+  .gv-a11y-link{display:block;margin:4px 0 10px;color:#22d3ee;}
+  .gv-a11y-close{margin-bottom:0;}
+  html.gv-hc body,html.gv-hc body *:not(img):not(svg):not(path){background:#000 !important;
+    border-color:#fff !important;text-shadow:none !important;box-shadow:none !important;}
+  html.gv-hc body,html.gv-hc body *{color:#fff !important;}
+  html.gv-hc body a,html.gv-hc body a *{color:#ff0 !important;}
+  html.gv-hc .gv-a11y-btn[aria-pressed="true"]{outline:3px solid #ff0;}
+  html.gv-ul a{text-decoration:underline !important;}
+  html.gv-rf body,html.gv-rf body *{font-family:Arial,Helvetica,sans-serif !important;letter-spacing:.02em;word-spacing:.06em;}
+  @media print{.gv-a11y{display:none !important;}}
+</style>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to the main content</a>
@@ -76,7 +107,7 @@
     <div class="crumb"><a href="./">Granular Volume</a> / Accessibility</div>
     <h1>Accessibility Statement</h1>
     <p class="dek">This app exists for people who find ordinary volume too loud. A website about it should not be hard to use. Here is exactly where this one stands, including the parts that are not finished.</p>
-    <p class="meta">Applies to <b>granularvolume.com</b> and to the privacy and terms pages at <b>rzuss.github.io/granular-volume-privacy</b> &middot; Published September 7, 2026 &middot; Last reviewed September 12, 2026</p>
+    <p class="meta">Applies to <b>granularvolume.com</b> and to the privacy and terms pages at <b>rzuss.github.io/granular-volume-privacy</b> &middot; Published September 7, 2026 &middot; Last reviewed September 14, 2026</p>
   </header>
 
 <main id="main" tabindex="-1">
@@ -102,6 +133,7 @@
       <li>The site is plain HTML and CSS. It works without JavaScript, it reflows to any window size, and text can be enlarged with the browser's own zoom without content being lost.</li>
       <li><b>Measured on September 12, 2026, at a 320 pixel viewport:</b> the page reflows with no sideways scrolling, text at double size loses nothing, and the spacing overrides the standard asks for (line height, letter, word and paragraph spacing) clip no text anywhere. Those are the reflow, resize-text and text-spacing requirements, tested rather than assumed.</li>
       <li>Nothing on the site moves, flashes, plays automatically or times out.</li>
+      <li><b>Added on September 14, 2026:</b> an accessibility button on every page, at the bottom left. It opens a small panel that can enlarge the page content, switch to high contrast, underline every link and change to a plainer font, and it links to this statement. It is part of this site, not a third-party plugin: it loads nothing from anyone else, sets no cookie, and remembers your choices only in the open browser tab, until you close it. Without JavaScript it is a plain link to this statement. It is an aid, and it does not replace the site itself meeting the standard, which is what the rest of this page is about.</li>
     </ul>
 
     <h2>Browsers and assistive technology</h2>
@@ -143,7 +175,7 @@
     </div>
 
     <h2>How this statement is kept honest</h2>
-    <p>It was prepared on September 7, 2026 after an actual review of this site, not from a template, and revised on September 12, 2026 after a second round of measurement. It is reviewed when the site changes materially and at least once a year. Every page added to this site is expected to carry the same skip link, main landmark and visible focus indicator described above.</p>
+    <p>It was prepared on September 7, 2026 after an actual review of this site, not from a template, revised on September 12, 2026 after a second round of measurement, and on September 14, 2026 when the accessibility button was added. It is reviewed when the site changes materially and at least once a year. Every page added to this site is expected to carry the same skip link, main landmark and visible focus indicator described above.</p>
     <p>If we ever claim full conformance here, it will be because an audit was done and can be pointed at.</p>
 
     <div class="he" lang="he" dir="rtl">
@@ -162,6 +194,7 @@
         <li>בכל דף קיים אזור תוכן ראשי מסומן, וסימון פוקוס נראה לעין בניווט מקלדת.</li>
         <li>האתר בנוי HTML ו־CSS בלבד, עובד ללא JavaScript, ומאפשר הגדלת טקסט בדפדפן ללא אובדן תוכן.</li>
         <li>אין באתר תוכן נע, מהבהב, מתנגן אוטומטית או מוגבל בזמן.</li>
+        <li>נוסף ב־14 בספטמבר 2026: כפתור נגישות בכל דף, בפינה השמאלית התחתונה. הוא פותח חלונית שמאפשרת להגדיל את תוכן הדף, לעבור לניגודיות גבוהה, להוסיף קו תחתון לכל קישור ולעבור לגופן פשוט יותר, ומקשר להצהרה זו. הכפתור הוא חלק מהאתר ואינו תוסף של צד שלישי: הוא אינו טוען דבר מגורם אחר, אינו שומר עוגיות, וזוכר את הבחירות רק בלשונית הדפדפן הפתוחה, עד לסגירתה. ללא JavaScript הוא קישור רגיל להצהרה. הכפתור הוא עזר, ואינו מחליף את עמידת האתר עצמו בתקן.</li>
       </ul>
       <h3>דפדפנים וטכנולוגיה מסייעת</h3>
       <p>האתר בנוי HTML ו־CSS בלבד ואמור לעבוד בגרסאות העדכניות של Chrome, Firefox, Safari ו־Edge, במחשב ובטלפון, ומכבד את הגדרת הפחתת התנועה של מערכת ההפעלה. נבדק ב־7 בספטמבר 2026 בניווט מקלדת בלבד ב־Chrome בכל הדפים, וב־12 בספטמבר 2026 נבדקו גם עריכה מחדש ברוחב 320 פיקסל, טקסט בגודל 200%, ועץ הנגישות שקוראי המסך מסתמכים עליו. טרם נבדק במלואו עם קוראי מסך (NVDA, JAWS, VoiceOver, TalkBack).</p>
@@ -181,7 +214,7 @@
         <li><b>נשיב לפנייתכם בתוך 10 ימי עסקים</b> ונעדכן מה בכוונתנו לעשות ובאיזה לוח זמנים.</li>
         <li><b>אם דרוש לכם תוכן בפורמט חלופי</b> עד לתיקון, בקשו ונשלח אותו כטקסט פשוט או בכל פורמט שנוח לכם.</li>
       </ul>
-      <p>הצהרה זו נכתבה ב־7 בספטמבר 2026 לאחר בדיקה בפועל של האתר, עודכנה ב־12 בספטמבר 2026 לאחר סבב מדידה נוסף, ומתעדכנת בכל שינוי מהותי ולפחות אחת לשנה.</p>
+      <p>הצהרה זו נכתבה ב־7 בספטמבר 2026 לאחר בדיקה בפועל של האתר, עודכנה ב־12 בספטמבר 2026 לאחר סבב מדידה נוסף וב־14 בספטמבר 2026 עם הוספת כפתור הנגישות, ומתעדכנת בכל שינוי מהותי ולפחות אחת לשנה.</p>
     </div>
 
   </article>
@@ -198,5 +231,7 @@
     This site counts visits with GoatCounter, without cookies and without storing IP addresses or other personal data.
   </div>
 </footer>
+<a class="gv-a11y gv-a11y-fab" id="gv-a11y-fab" href="accessibility.html" aria-label="Accessibility"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm8.5 5.6-5.5 1.1v4.1l2.4 7.4a1 1 0 0 1-1.9.6L13.3 15h-2.6l-2.2 5.8a1 1 0 0 1-1.9-.6l2.4-7.4V8.7L3.5 7.6a1 1 0 1 1 .4-2l6.2 1.2h3.8l6.2-1.2a1 1 0 1 1 .4 2z"/></svg></a>
+<script src="a11y.js" defer></script>
 </body>
 </html>
