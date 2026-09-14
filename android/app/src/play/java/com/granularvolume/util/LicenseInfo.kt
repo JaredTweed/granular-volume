@@ -18,6 +18,7 @@ object LicenseInfo {
         "AndroidX Lifecycle Service" to "The Android Open Source Project, Apache License 2.0",
         "Material Components for Android" to "Google LLC, Apache License 2.0",
         "Kotlin Coroutines for Android" to "JetBrains s.r.o., Apache License 2.0",
+        "Kotlin Standard Library" to "JetBrains s.r.o. and Kotlin Programming Language contributors, Apache License 2.0",
     )
 
     val proprietary: List<Pair<String, String>> = listOf(

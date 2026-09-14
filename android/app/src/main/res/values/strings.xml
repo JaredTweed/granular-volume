@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Quiet Dial</string>
-    <string name="gv_subtitle">Precise per-stream volume, always within reach</string>
+    <string name="gv_subtitle">Quieter than your phone or tablet allows</string>
 
     <!-- Permission setup screen -->
     <string name="gv_grant_overlay">Grant overlay access</string>
@@ -17,8 +17,8 @@
 
     <!-- Overlay -->
     <string name="gv_dismiss">Close volume control</string>
-    <string name="gv_louder">Louder, reduce attenuation</string>
-    <string name="gv_quieter">Quieter, increase attenuation</string>
+    <string name="gv_louder">Louder</string>
+    <string name="gv_quieter">Quieter</string>
     <string name="gv_mute">Mute media</string>
     <string name="gv_divider_desc">Device minimum volume line</string>
     <string name="gv_line_tooltip">below the line:\nquieter than your\ndevice minimum</string>
@@ -50,7 +50,7 @@
     <string name="gv_paywall_title">Your seven days are over</string>
     <string name="gv_paywall_depth">Every quiet step down to −30 dB, the whole normal range, and mute. One key, once, opens all of it.</string>
     <string name="gv_paywall_body">One-time purchase, yours on this account with nothing to renew. No subscription. The app stays free of ads, tracking and internet access.</string>
-    <string name="gv_paywall_expectation">Google Play will open on a small companion app, Full Range Key. Buying and installing it is the whole unlock, and these steps open here straight away.</string>
+    <string name="gv_paywall_expectation">Google Play will open on a small companion app, Full Range Key. Buying and installing it is the whole unlock: every step opens here as soon as the key is installed.</string>
     <string name="gv_paywall_cta">Get Full Range Key on Google Play</string>
     <string name="gv_paywall_not_now">Not now</string>
     <string name="gv_paywall_terms">By upgrading, you agree to our Terms of Use</string>
