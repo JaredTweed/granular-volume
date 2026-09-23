@@ -140,11 +140,11 @@ whole range: up through normal volume, and on below the minimum. The audio in
 the video drops with every step shown on screen, so you can hear the difference
 rather than just read about it.
 
-<a href="https://www.youtube.com/shorts/_c5YBBeVgaU">
-<img src="https://i.ytimg.com/vi/_c5YBBeVgaU/hqdefault.jpg" width="320" alt="Quiet Dial: your whole Android volume range on one slider">
+<a href="https://www.youtube.com/shorts/z0E8cnxuU14">
+<img src="https://i.ytimg.com/vi/z0E8cnxuU14/hqdefault.jpg" width="320" alt="Quiet Dial: your whole Android volume range on one slider">
 </a>
 
-[Watch on YouTube](https://www.youtube.com/shorts/_c5YBBeVgaU)
+[Watch on YouTube](https://www.youtube.com/shorts/z0E8cnxuU14)
 
 ## Compatibility
 
