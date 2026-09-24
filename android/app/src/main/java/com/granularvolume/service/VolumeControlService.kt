@@ -266,12 +266,7 @@ class VolumeControlService : Service() {
                 stopRequestedByUser = true
                 stopSelf()
             },
-            onInfo          = {
-                startActivity(
-                    Intent(applicationContext, InfoSheetActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            }
+            onInfo          = { openInfoSheet() }
         )
         // Wired HERE, after construction, never inside a callback. It sat inside the onInfo
         // lambda until 2026-09-09, which compiled and meant it was only ever assigned after
@@ -409,18 +404,27 @@ class VolumeControlService : Service() {
         return true
     }
 
-    private fun openInfoSheet() {
-        startActivity(
-            Intent(applicationContext, InfoSheetActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-    }
+    private fun openInfoSheet() = startSheet(InfoSheetActivity::class.java)
 
-    private fun openPaywall() {
-        startActivity(
-            Intent(applicationContext, PaywallActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
+    private fun openPaywall() = startSheet(PaywallActivity::class.java)
+
+    /**
+     * 1.5.3: every screen the service opens goes through here. Android may refuse an activity
+     * start from a service (background-start limits, a start that races the boot sequence), and
+     * the refusal arrives as a RuntimeException ("Activity could not be started"). Thrown from
+     * onStartCommand, it killed the whole service: the control vanished because a sheet could
+     * not open. Found in the emulator's dropbox during the 1.5.3 lifecycle run, on the locked
+     * start path (onOpenedByUser -> openInfoSheet). A refused sheet is now logged and skipped;
+     * the dial keeps running, and the user meets the sheet on their next tap.
+     */
+    private fun startSheet(activity: Class<*>) {
+        try {
+            startActivity(
+                Intent(applicationContext, activity).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        } catch (e: RuntimeException) {
+            Log.w(tag, "Could not open ${activity.simpleName}: ${e.message}")
+        }
     }
 
     /**

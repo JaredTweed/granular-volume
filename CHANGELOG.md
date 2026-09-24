@@ -16,6 +16,9 @@ All notable changes to Granular Volume are documented here. Format loosely follo
 - The restart after a phone reboot could crash the app when Android refused to let it start in the
   background at that moment (ForegroundServiceStartNotAllowedException in BootReceiver). A refused
   restart now leaves the control off until the next time it is opened, without a crash.
+- When Android refused to open the access sheet from the background (seen right after a reboot), the
+  refusal was thrown from the service and stopped the whole control. Sheet opens are now guarded:
+  a refused sheet is skipped and the dial keeps running.
 
 ## 1.5.2 (versionCode 35)
 
