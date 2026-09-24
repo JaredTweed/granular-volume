@@ -17,6 +17,9 @@ object Prefs {
     private const val KEY_OVERLAY_Y        = "overlay_y"
     private const val KEY_SERVICE_WAS_RUNNING = "service_was_running"
     private const val KEY_COLLAPSED        = "overlay_collapsed"
+    private const val KEY_BLADE_Y          = "blade_y"
+    private const val KEY_BLADE_RIGHT      = "blade_right"
+    private const val KEY_BLADE_TIP_SHOWN  = "blade_tip_shown"
     private const val KEY_QS_TILE_OFFERED  = "qs_tile_offered"
     private const val KEY_LAUNCH_COUNT     = "launch_count"
     private const val KEY_TILE_ACTIVATIONS = "tile_activations"
@@ -72,6 +75,30 @@ object Prefs {
 
     fun setCollapsed(context: Context, collapsed: Boolean) {
         prefs(context).edit { putBoolean(KEY_COLLAPSED, collapsed) }
+    }
+
+    // 1.5.1 Quiet Blade. The dial's own (x, y) above is deliberately NOT overwritten while
+    // collapsed: it is the "home" the blade returns to, exactly as the user left it. The blade
+    // keeps its own vertical position and the edge it hugs.
+    fun getBladeY(context: Context, default: Int): Int =
+        prefs(context).getInt(KEY_BLADE_Y, default)
+
+    /** True = right edge, false = left edge. */
+    fun isBladeOnRight(context: Context, default: Boolean): Boolean =
+        prefs(context).getBoolean(KEY_BLADE_RIGHT, default)
+
+    fun setBladePlacement(context: Context, y: Int, onRight: Boolean) {
+        prefs(context).edit {
+            putInt(KEY_BLADE_Y, y)
+            putBoolean(KEY_BLADE_RIGHT, onRight)
+        }
+    }
+
+    fun wasBladeTipShown(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_BLADE_TIP_SHOWN, false)
+
+    fun setBladeTipShown(context: Context) {
+        prefs(context).edit { putBoolean(KEY_BLADE_TIP_SHOWN, true) }
     }
 
     fun wasQsTileOffered(context: Context): Boolean =

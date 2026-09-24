@@ -26,29 +26,59 @@
         android:scaleType="centerInside"
         android:contentDescription="@string/gv_dismiss" />
 
-    <!-- Info — the pill's only route to status, purchase and the legal texts, and the
-         reason it lives HERE: the main screen closes itself once set up, so the dial is
-         the single surface a user still sees every day.
+    <!-- Second row of the meta zone, 1.5.1: [ⓘ] [−], side by side.
 
-         It replaces the old 4dp drag handle, which was decorative only. Dragging is
-         handled on the WHOLE pill (OverlayManager's root touch listener), so the handle
-         taught a specificity that was never true and spent 4dp saying it.
+         Until 1.5.1 the info button sat alone here, centred, directly under close. A
+         finger aiming at close and landing 6dp low opened the info sheet, and for an
+         existing user that sheet ends in a purchase button, so the mis-tap read as a
+         paywall (one-star review, 2026-09-24). Close cannot move: with SIDE_PEEK_DP = 50
+         the only 26dp column visible whichever edge the pill is tucked to is exactly the
+         centred one it occupies. So the row below it changed instead.
 
-         Same 26dp circle as the close button above it, deliberately: the top of the pill
-         is the meta zone, the things that are not volume, and its two members should read
-         as one family. Everything below this point is untouched. -->
-    <ImageButton
-        android:id="@+id/gv_btn_info"
-        android:layout_width="26dp"
+         The row is exactly as tall as the button it replaces (26dp + the same margins), so
+         the top zone is still 70dp and the pill's outer envelope has not moved by a pixel.
+         Two 26dp circles and a 4dp gap fill the 56dp inner width with no growth.
+
+         Minimize sits on the RIGHT, under close's right half and the centre line, and the
+         hit test lets it win the whole band below close: a low tap aimed at close now
+         minimizes, which is recoverable with one tap on the blade and is, in intent, the
+         nearest thing to what that finger wanted. Info moves to the left, out from under
+         close's centre. layoutDirection is pinned so an RTL device (the owner's) draws the
+         same picture the hit test was designed for. -->
+    <LinearLayout
+        android:id="@+id/gv_meta_row"
+        android:layout_width="56dp"
         android:layout_height="26dp"
-        android:background="@drawable/bg_overlay_close"
-        android:src="@drawable/ic_info"
-        android:tint="#B3FFFFFF"
-        android:padding="4dp"
-        android:scaleType="centerInside"
         android:layout_marginTop="6dp"
         android:layout_marginBottom="6dp"
-        android:contentDescription="@string/gv_info" />
+        android:orientation="horizontal"
+        android:layoutDirection="ltr"
+        android:gravity="center_vertical">
+
+        <ImageButton
+            android:id="@+id/gv_btn_info"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:background="@drawable/bg_overlay_close"
+            android:src="@drawable/ic_info"
+            android:tint="#B3FFFFFF"
+            android:padding="4dp"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/gv_info" />
+
+        <ImageButton
+            android:id="@+id/gv_btn_minimize"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_overlay_close"
+            android:src="@drawable/ic_minimize"
+            android:tint="#B3FFFFFF"
+            android:padding="4dp"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/gv_minimize" />
+
+    </LinearLayout>
 
     <!-- Collapsible body: hidden when the pill is tucked into the bottom tab. -->
     <LinearLayout
