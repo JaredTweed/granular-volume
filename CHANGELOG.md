@@ -2,6 +2,13 @@
 
 All notable changes to Granular Volume are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 1.5.2 (versionCode 35)
+
+### Fixed
+- After the dial came back from the edge tab, the upper-zone bars (normal volume, above the orange
+  line) were not drawn, although taps still changed the volume. The dial is rebuilt fresh on every
+  restore, and the bar cache now checks that its bars belong to the dial on screen.
+
 ## 1.5.1 (versionCode 34)
 
 ### Added

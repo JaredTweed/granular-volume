@@ -270,6 +270,9 @@ class OverlayManager(
         val themedCtx = ContextThemeWrapper(context, R.style.Theme_GranularVolume)
         val view = LayoutInflater.from(themedCtx).inflate(R.layout.overlay_slider, null)
         overlayView = view
+        // A fresh view has an empty upper container: the old bars belong to the view that was
+        // just discarded, so the cache is dropped before setupView builds them again.
+        upperBars.clear()
         setupView(view)
         // Home position: the last place the user left the dial. Not touched while collapsed,
         // which is exactly why the tab can bring it back to the same spot.
@@ -300,6 +303,9 @@ class OverlayManager(
                 view.systemGestureExclusionRects = listOf(Rect(0, 0, view.width, view.height))
             }
             scheduleIdleFade(view)
+            // Harness hook (A34): the upper zone must be populated in the view that is on screen.
+            android.util.Log.d("GranularVolume", "dial shown: upper bars in container=" +
+                view.findViewById<LinearLayout>(R.id.gv_upper_container).childCount)
         }
     }
 
@@ -776,7 +782,12 @@ class OverlayManager(
     private fun buildUpperBars(view: View) {
         val container = view.findViewById<LinearLayout>(R.id.gv_upper_container)
         val count = coordinator.upperPositionCount().coerceAtLeast(1)
-        if (count == upperBars.size) return
+        // The cache is valid only if the bars live in THIS view's container. Since 1.5.1 the
+        // dial is inflated afresh every time it comes back from the tab, and until 1.5.2 this
+        // check compared the count alone: the new container stayed empty while the list still
+        // held the bars of the discarded view, so the upper zone rendered blank after every
+        // restore (owner's phone, 2026-09-24, right after the key arrived).
+        if (count == upperBars.size && upperBars.firstOrNull()?.parent === container) return
         container.removeAllViews()
         upperBars.clear()
 
