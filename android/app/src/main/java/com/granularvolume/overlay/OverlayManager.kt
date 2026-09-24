@@ -484,6 +484,7 @@ class OverlayManager(
             when (e.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     wakeBlade()
+                    bladeView?.pressedLook = true
                     initialY = bladeParams.y
                     downRawX = e.rawX
                     downRawY = e.rawY
@@ -495,7 +496,7 @@ class OverlayManager(
                     val dy = (e.rawY - downRawY).toInt()
                     val inward = if (bladeOnRight) -dx else dx
                     if (inward >= pullPx) { expand(); return@setOnTouchListener true }
-                    if (!dragging && abs(dy) > DRAG_SLOP_PX) dragging = true
+                    if (!dragging && abs(dy) > DRAG_SLOP_PX) { dragging = true; bladeView?.pressedLook = false }
                     if (dragging) {
                         bladeParams.y = clampTabY(initialY + dy)
                         runCatching { wm.updateViewLayout(root, bladeParams) }
@@ -503,6 +504,7 @@ class OverlayManager(
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    bladeView?.pressedLook = false
                     if (dragging) {
                         Prefs.setBladePlacement(context, bladeParams.y, bladeOnRight)
                         scheduleBladeIdle()

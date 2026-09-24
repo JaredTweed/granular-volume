@@ -35,6 +35,9 @@ class DockTabView(context: Context) : View(context) {
     var locked = false
     var dim = 1f
         set(value) { field = value; invalidate() }
+    /** Finger down on the tab: the button brightens and sinks a little, like the dial's keys. */
+    var pressedLook = false
+        set(value) { field = value; invalidate() }
 
     private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val strokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
@@ -44,6 +47,8 @@ class DockTabView(context: Context) : View(context) {
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
     }
+    private val buttonPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val buttonStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val shape = Path()
     private val rect = RectF()
 
@@ -101,12 +106,25 @@ class DockTabView(context: Context) : View(context) {
         strokePaint.strokeWidth = d
         canvas.drawPath(shape, strokePaint)
 
-        // The plus: what a tap does. Centred on the tab, 14dp arms, 2dp stroke.
+        // The plus, drawn as a BUTTON: the same circular surface as the dial's close, minimize
+        // and info keys (bg_overlay_close: faint fill, hairline stroke), so it reads as one
+        // family and as something a finger presses. Pressed: brighter fill, sunk to 0.92.
         val cx = (left + right) / 2f
         val cy = (top + bottom) / 2f
-        val arm = 7f * d
+        val press = if (pressedLook) 0.92f else 1f
+        val radius = 11f * d * press
+        // An opaque base first, so the level fill and the tick read as passing BEHIND the
+        // button instead of through it; then the same faint white the dial's keys use.
+        buttonPaint.color = argb(0xFF, 0x1A, 0x1A, 0x2E, dim)
+        canvas.drawCircle(cx, cy, radius, buttonPaint)
+        buttonPaint.color = argb(0xFF, 0xFF, 0xFF, 0xFF, (if (pressedLook) 0.30f else 0.12f) * dim)
+        canvas.drawCircle(cx, cy, radius, buttonPaint)
+        buttonStrokePaint.strokeWidth = d
+        buttonStrokePaint.color = argb(0xFF, 0xFF, 0xFF, 0xFF, 0.16f * dim)
+        canvas.drawCircle(cx, cy, radius, buttonStrokePaint)
+        val arm = 5.5f * d * press
         glyphPaint.strokeWidth = 2f * d
-        glyphPaint.color = argb(0xFF, 0xFF, 0xFF, 0xFF, (if (locked) 0.45f else 0.9f) * dim)
+        glyphPaint.color = argb(0xFF, 0xFF, 0xFF, 0xFF, (if (locked) 0.45f else 0.92f) * dim)
         canvas.drawLine(cx - arm, cy, cx + arm, cy, glyphPaint)
         canvas.drawLine(cx, cy - arm, cx, cy + arm, glyphPaint)
     }
