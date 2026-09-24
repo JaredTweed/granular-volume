@@ -2,6 +2,18 @@
 
 All notable changes to Granular Volume are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 1.5.3 (versionCode 36)
+
+### Fixed
+- Stopping the control (notification, Quick Settings tile) during the 0.2 s fold into the edge tab
+  could leave the tab or the dial on screen with no service behind it. Every fold now checks that
+  the control is still running before it adds the next window.
+- When the Full Range Key arrived while the dial was folded into the tab, the dial came back but the
+  unlock wave was skipped. It now plays once the dial is back on screen.
+- The main screen could crash when Google Play's rating prompt finished after the screen had
+  already closed (IllegalStateException in launchService, present since 1.4.x). The control now
+  starts directly in that case.
+
 ## 1.5.2 (versionCode 35)
 
 ### Fixed

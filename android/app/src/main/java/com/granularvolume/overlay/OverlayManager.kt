@@ -246,6 +246,7 @@ class OverlayManager(
      */
     fun show() {
         if (overlayView != null || bladeRoot != null) return
+        attached = true
         if (Prefs.isCollapsed(context)) showTab(animateIn = false) else showDial()
 
         // One render pipeline for BOTH forms: any state change (gain flow or coordinator
@@ -315,6 +316,14 @@ class OverlayManager(
     }
 
     fun hide() {
+        // Order matters: mark detached FIRST, so a morph whose end action is already queued
+        // finds the manager closed; then cancel the animators so most end actions never run.
+        attached = false
+        pendingCelebration = false
+        snapAnimator?.cancel()
+        overlayView?.animate()?.cancel()
+        bladeRoot?.animate()?.cancel()
+        morphing = false
         endTour(animated = false)
         flowJob?.cancel()
         flowJob = null
@@ -332,6 +341,20 @@ class OverlayManager(
 
     private var snapAnimator: ValueAnimator? = null
     private var morphing = false
+
+    /**
+     * 1.5.3: true between show() and hide(). The morph animations end in a callback that adds
+     * the next window (tab or dial); if the service stopped during those 130-200 ms, that
+     * callback used to attach a window to a manager whose service was already gone, and the
+     * overlay outlived the control. Every morph end now checks this first.
+     */
+    private var attached = false
+
+    /**
+     * 1.5.3: the key arrived while the dial was docked or mid-morph. The celebration needs the
+     * dial on screen, so it is remembered here and played once the dial has come back.
+     */
+    private var pendingCelebration = false
 
     /**
      * Magnetic docking. Called when a drag ends: if the dial's near edge is within
@@ -387,12 +410,16 @@ class OverlayManager(
         dial.removeCallbacks(idleFadeRunnable)
         pushArmed = false
 
-        val finish = {
+        val finish = finish@{
             runCatching { wm.removeView(dial) }
             if (overlayView === dial) overlayView = null
+            morphing = false
+            // The service stopped during the morph: hide() already cleaned up; add nothing.
+            if (!attached) return@finish
             showTab(animateIn = true)
             bladeRoot?.let { confirmHaptic(it) }
-            morphing = false
+            // The key arrived mid-collapse: bring the dial straight back for the celebration.
+            if (pendingCelebration) { expand(); return@finish }
             // One-time tip on the first collapse, as a plain text toast: the tab has no room
             // for a callout, and text toasts are allowed from a foreground service.
             if (!Prefs.wasBladeTipShown(context)) {
@@ -415,11 +442,20 @@ class OverlayManager(
         morphing = true
         Prefs.setCollapsed(context, false)
         val onRight = bladeOnRight
-        val finish = {
+        val finish = finish@{
             removeBladeWindow()
-            showDial(entranceFromRight = onRight, animateEntrance = true)
-            overlayView?.let { confirmHaptic(it) }
             morphing = false
+            if (!attached) return@finish
+            showDial(entranceFromRight = onRight, animateEntrance = true)
+            overlayView?.let { v ->
+                confirmHaptic(v)
+                // Play the purchase wave only after the entrance has settled, so the two
+                // animations never fight over the same view.
+                if (pendingCelebration) {
+                    pendingCelebration = false
+                    v.postDelayed({ if (overlayView === v) celebrateUnlock() }, MORPH_MS + 60L)
+                }
+            }
         }
         tab.animate().cancel()
         if (!animationsEnabled()) { finish(); return }
@@ -1221,8 +1257,17 @@ class OverlayManager(
     fun celebrateUnlock() {
         // A purchase is the one moment the dial should be in view whatever the user did with
         // it: the wave up the ladder is the confirmation, and a blade cannot show one.
-        if (bladeRoot != null) expand()
+        // 1.5.3: expand() is animated, so the dial is not on screen yet at this instant. Until
+        // then the wave was skipped because overlayView was still null. Now it waits for the
+        // dial: expand() plays it at the end of its entrance (and a collapse in flight turns
+        // straight back).
+        if (bladeRoot != null || morphing) {
+            pendingCelebration = true
+            if (!morphing) expand()
+            return
+        }
         val view = overlayView ?: return
+        android.util.Log.d("GranularVolume", "unlock celebrated on the dial")
         render(view)
         wake(view)
         confirmHaptic(view)

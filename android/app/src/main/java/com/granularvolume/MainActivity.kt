@@ -10,6 +10,7 @@ import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -312,11 +313,28 @@ class MainActivity : AppCompatActivity() {
     // -------------------------------------------------------------------------
 
     private fun launchService() {
+        // 1.5.3: this also runs as the in-app review's completion callback, which Play can
+        // deliver after the user has already left and the activity is destroyed. The result
+        // launcher is unregistered by then, and launch() threw IllegalStateException (2 users
+        // in 28 days, every 1.4.x/1.5.x version). A destroyed screen can show no dialog, so the
+        // control is started directly and the permission question waits for the next visit.
+        if (isFinishing || isDestroyed) {
+            runCatching {
+                applicationContext.startForegroundService(Intent(applicationContext, VolumeControlService::class.java))
+            }.onFailure { Log.w("GranularVolume", "launchService after destroy: ${it.message}") }
+            return
+        }
         // On Android 13+: request notification permission so the FGS notification
         // is visible immediately. The service runs regardless of the user's choice.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            notificationPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            try {
+                notificationPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } catch (e: IllegalStateException) {
+                // Belt and braces for the same race: never crash the screen over a permission prompt.
+                Log.w("GranularVolume", "notification permission prompt unavailable: ${e.message}")
+                startServiceAndOfferTile()
+            }
         } else {
             startServiceAndOfferTile()
         }
