@@ -60,8 +60,8 @@
     <string name="gv_info">About this app and your access. Drag anywhere on the control to move it.</string>
     <!-- 1.5.1 Quiet Blade: the minimize button and the collapsed strip it produces. -->
     <string name="gv_minimize">Minimize the volume control to the screen edge. It keeps working.</string>
-    <string name="gv_blade_desc">Volume control, minimized at the screen edge. Tap to bring it back.</string>
-    <string name="gv_blade_tip">Tap the strip at the edge to bring the control back</string>
+    <string name="gv_blade_desc">Volume control, minimized at the screen edge. Tap the plus to bring it back.</string>
+    <string name="gv_blade_tip">Tap + at the edge to bring the control back</string>
     <string name="gv_info_title">Your access</string>
     <string name="gv_info_state_grandfathered">Every step is yours, free, always</string>
     <string name="gv_info_state_unlocked">Unlocked with the Full Range Key</string>

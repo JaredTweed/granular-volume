@@ -13,38 +13,26 @@
     android:background="@drawable/bg_pill_overlay"
     android:elevation="20dp">
 
-    <!-- Close — small, at the TOP so it stays reachable even when the pill is
-         tucked low against the bottom edge (away from the home gesture zone). -->
+    <!-- META ZONE, 1.5.1 pilot 2 (owner's layout, 2026-09-24): info alone at the very top,
+         then one row of window controls, [minimize] [close], close on the right as every
+         desktop has taught. Info is the least-used control, so it gets the quiet spot and a
+         lighter tint; the two actions that change the dial's presence sit together below it.
+         Row height equals the old stacked button, so the top zone is still 70dp and the
+         pill's envelope has not moved. -->
     <ImageButton
-        android:id="@+id/gv_btn_dismiss"
+        android:id="@+id/gv_btn_info"
         android:layout_width="26dp"
         android:layout_height="26dp"
         android:background="@drawable/bg_overlay_close"
-        android:src="@drawable/ic_close"
-        android:tint="#B3FFFFFF"
-        android:padding="6dp"
+        android:src="@drawable/ic_info"
+        android:tint="#8CFFFFFF"
+        android:padding="4dp"
         android:scaleType="centerInside"
-        android:contentDescription="@string/gv_dismiss" />
+        android:contentDescription="@string/gv_info" />
 
-    <!-- Second row of the meta zone, 1.5.1: [ⓘ] [−], side by side.
-
-         Until 1.5.1 the info button sat alone here, centred, directly under close. A
-         finger aiming at close and landing 6dp low opened the info sheet, and for an
-         existing user that sheet ends in a purchase button, so the mis-tap read as a
-         paywall (one-star review, 2026-09-24). Close cannot move: with SIDE_PEEK_DP = 50
-         the only 26dp column visible whichever edge the pill is tucked to is exactly the
-         centred one it occupies. So the row below it changed instead.
-
-         The row is exactly as tall as the button it replaces (26dp + the same margins), so
-         the top zone is still 70dp and the pill's outer envelope has not moved by a pixel.
-         Two 26dp circles and a 4dp gap fill the 56dp inner width with no growth.
-
-         Minimize sits on the RIGHT, under close's right half and the centre line, and the
-         hit test lets it win the whole band below close: a low tap aimed at close now
-         minimizes, which is recoverable with one tap on the blade and is, in intent, the
-         nearest thing to what that finger wanted. Info moves to the left, out from under
-         close's centre. layoutDirection is pinned so an RTL device (the owner's) draws the
-         same picture the hit test was designed for. -->
+    <!-- Window controls: [minimize] [close]. layoutDirection is pinned so an RTL device
+         (the owner's) draws the same picture the hit test was designed for. A tap in the
+         gap between them resolves to minimize: recoverable beats destructive. -->
     <LinearLayout
         android:id="@+id/gv_meta_row"
         android:layout_width="56dp"
@@ -56,27 +44,27 @@
         android:gravity="center_vertical">
 
         <ImageButton
-            android:id="@+id/gv_btn_info"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:background="@drawable/bg_overlay_close"
-            android:src="@drawable/ic_info"
-            android:tint="#B3FFFFFF"
-            android:padding="4dp"
-            android:scaleType="centerInside"
-            android:contentDescription="@string/gv_info" />
-
-        <ImageButton
             android:id="@+id/gv_btn_minimize"
             android:layout_width="26dp"
             android:layout_height="26dp"
-            android:layout_marginStart="4dp"
             android:background="@drawable/bg_overlay_close"
             android:src="@drawable/ic_minimize"
             android:tint="#B3FFFFFF"
             android:padding="4dp"
             android:scaleType="centerInside"
             android:contentDescription="@string/gv_minimize" />
+
+        <ImageButton
+            android:id="@+id/gv_btn_dismiss"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/bg_overlay_close"
+            android:src="@drawable/ic_close"
+            android:tint="#B3FFFFFF"
+            android:padding="6dp"
+            android:scaleType="centerInside"
+            android:contentDescription="@string/gv_dismiss" />
 
     </LinearLayout>
 

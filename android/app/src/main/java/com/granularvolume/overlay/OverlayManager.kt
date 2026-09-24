@@ -1,5 +1,7 @@
 package com.granularvolume.overlay
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
@@ -16,6 +18,9 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -84,7 +89,6 @@ class OverlayManager(
         private const val DEFAULT_Y = 200
         private const val DRAG_SLOP_PX = 12
         private const val ANIM_MS = 120L
-        private const val SIDE_PEEK_DP = 50
         private const val BOTTOM_VISIBLE_FRACTION = 4
         private const val IDLE_FADE_DELAY_MS = 3500L
         private const val IDLE_FADE_MS = 380L
@@ -114,38 +118,39 @@ class OverlayManager(
         private const val CHEVRON_SLOP_DP = 9
 
         /**
-         * 1.5.1: info and minimize share the second row, 4dp apart, and info's slop is
-         * exactly that gap. It used to be 6 (half of close's) when info sat alone under
-         * close and claimed the vertical gap; now the band below close belongs to minimize
-         * (tested first, with close's own 12dp), so info claims only its own circle plus
-         * the sliver between the two buttons. Close keeps every pixel it had.
+         * 1.5.1 pilot 2: info sits alone at the top; 6dp of slop claims the gap down to the
+         * window-control row and stops at its edge. It is hit-tested before that row, so a
+         * finger aiming at info and landing a little low still gets the sheet, never close.
          */
-        private const val INFO_SLOP_DP = 4
+        private const val INFO_SLOP_DP = 6
         /**
-         * Minimize owns the band under close: a finger that aims at close and lands low
-         * (the 2026-09-24 one-star mis-tap) now minimizes instead of opening the sheet.
-         * Recoverable beats destructive, and beats a sheet that ends in a purchase button.
+         * Minimize and close share one row, minimize on the left. Minimize is hit-tested
+         * first with the wider slop, so the gap between them and any low miss from info
+         * resolve to minimize: recoverable beats destructive.
          */
         private const val MINIMIZE_SLOP_DP = 12
         private const val MUTE_SLOP_DP = 12
 
-        // 1.5.1 Quiet Blade geometry (spec locked 2026-08-30; dp values are build-time polish).
-        private const val BLADE_W_DP = 24        // touchable window width, fully on screen
-        private const val BLADE_STRIP_DP = 6     // painted sliver at the edge
-        private const val BLADE_H_DP = 96
-        private const val BLADE_TOP_MIN_DP = 96  // never higher than this from the top
-        private const val BLADE_NAV_GAP_DP = 160 // never lower than this above the nav bar
-        /**
-         * How far beyond today's clamp a drag must push before it counts as "through the
-         * wall". Small on purpose: once the dial is clamped, the finger has at most the 50dp
-         * peek left before it leaves the glass, and less than that from a centre grab, so 48dp
-         * (the first pilot value) was unreachable on a phone. 20dp is reachable from a grab on
-         * the outer third of the dial and still lies entirely in territory today's drag never
-         * enters; the preview, the haptic and the ease-back hysteresis guard the accident case.
-         */
-        private const val PUSH_THROUGH_DP = 20
+        // 1.5.1 pilot 2: docking geometry. All dp values are build-time polish.
+        private const val TAB_W_DP = 30            // painted D-shaped tab
+        private const val TAB_H_DP = 72
+        private const val TAB_WINDOW_W_DP = 44     // its touch window, fully on screen
+        private const val TAB_WINDOW_H_DP = 88
+        private const val TAB_TOP_MIN_DP = 96      // never higher than this from the top
+        private const val TAB_NAV_GAP_DP = 160     // never lower than this above the nav bar
+        /** Pull the tab this far inward and the dial comes out, without lifting the finger. */
+        private const val TAB_PULL_DP = 40
+        /** Release the dial with its near edge inside this band and it is pulled to the wall. */
+        private const val SNAP_ZONE_DP = 64
+        private const val SNAP_MS = 240L
+        /** A drag that continues this far past the wall (the dial is already flush) collapses it. */
+        private const val PUSH_THROUGH_DP = 28
         private const val PREVIEW_SCALE = 0.85f
         private const val PREVIEW_ALPHA = 0.7f
+        private const val MORPH_MS = 200L
+        private const val MORPH_OUT_MS = 130L
+        private const val MORPH_SCALE = 0.35f
+        private const val TAB_IDLE_ALPHA = 0.6f
 
         // 1.4.4 press feedback + key-press flash.
         private const val PRESS_SCALE = 0.96f
@@ -179,7 +184,7 @@ class OverlayManager(
     // overlayView / bladeRoot exists at a time; the coordinator flows keep feeding whichever
     // is up, so attenuation and the level readout never stop while the dial is away.
     private var bladeRoot: FrameLayout? = null
-    private var bladeView: BladeView? = null
+    private var bladeView: DockTabView? = null
     private var bladeOnRight = false
     private var bladeDimAnimator: ValueAnimator? = null
     private val bladeParams = WindowManager.LayoutParams(
@@ -190,7 +195,7 @@ class OverlayManager(
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
         PixelFormat.TRANSLUCENT
     ).apply { gravity = Gravity.TOP or Gravity.START }
-    private val bladeIdleRunnable = Runnable { animateBladeDim(IDLE_ALPHA, IDLE_FADE_MS) }
+    private val bladeIdleRunnable = Runnable { animateBladeDim(TAB_IDLE_ALPHA, IDLE_FADE_MS) }
 
     // Push-through state, live only during a drag of the dial.
     private var pushArmed = false
@@ -231,7 +236,7 @@ class OverlayManager(
      */
     fun show() {
         if (overlayView != null || bladeRoot != null) return
-        if (Prefs.isCollapsed(context)) showBlade() else showDial()
+        if (Prefs.isCollapsed(context)) showTab(animateIn = false) else showDial()
 
         // One render pipeline for BOTH forms: any state change (gain flow or coordinator
         // revision) re-renders whichever surface is up. Started once per show/hide cycle,
@@ -251,19 +256,39 @@ class OverlayManager(
         }
     }
 
-    private fun showDial() {
+    private fun showDial(entranceFromRight: Boolean = false, animateEntrance: Boolean = false) {
         val themedCtx = ContextThemeWrapper(context, R.style.Theme_GranularVolume)
         val view = LayoutInflater.from(themedCtx).inflate(R.layout.overlay_slider, null)
         overlayView = view
         setupView(view)
         // Home position: the last place the user left the dial. Not touched while collapsed,
-        // which is exactly why the blade can bring it back to the same spot.
+        // which is exactly why the tab can bring it back to the same spot.
         layoutParams.x = Prefs.getOverlayX(context, DEFAULT_X)
         layoutParams.y = Prefs.getOverlayY(context, DEFAULT_Y)
         wm.addView(view, layoutParams)
 
+        // Entrance from the tab: the dial springs out of the wall it was folded into. Set
+        // before the first frame so there is no flash of the full dial.
+        val animateIn = animateEntrance && animationsEnabled()
+        if (animateIn) {
+            view.scaleX = MORPH_SCALE
+            view.scaleY = 0.92f
+            view.alpha = 0f
+        }
+
         view.post {
             if (clampToBounds(view)) applyLayout()
+            if (animateIn) {
+                view.pivotX = if (entranceFromRight) view.width.toFloat() else 0f
+                view.pivotY = view.height / 2f
+                view.animate().scaleX(1f).scaleY(1f).alpha(ACTIVE_ALPHA).setDuration(MORPH_MS)
+                    .setInterpolator(OvershootInterpolator(1.2f)).start()
+            }
+            // The dial may sit flush against a wall, inside the back-gesture inset; exclude
+            // its own rect so a drag that starts there is ours (the system trims to 200dp).
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                view.systemGestureExclusionRects = listOf(Rect(0, 0, view.width, view.height))
+            }
             scheduleIdleFade(view)
         }
     }
@@ -285,78 +310,149 @@ class OverlayManager(
     }
 
     // ────────────────────────────────────────────────────────────────
-    // 1.5.1 Quiet Blade: collapse, restore, and the strip itself
+    // 1.5.1 pilot 2: suction to the wall, collapse to a "+" tab, and restore
     // ────────────────────────────────────────────────────────────────
 
+    private var snapAnimator: ValueAnimator? = null
+    private var morphing = false
+
     /**
-     * Collapse the dial to the blade on the given edge. The dial's (x, y) is saved first and
-     * is what [expand] returns to, exactly. Attenuation is untouched: this is a view swap.
+     * Magnetic docking. Called when a drag ends: if the dial's near edge is within
+     * SNAP_ZONE_DP of a side wall it glides flush to that wall, with one tick. Outside the
+     * zone it stays where it was dropped, so free placement survives and only the last
+     * stretch is pulled in. The wall is where a later push-through or minimize docks from.
      */
-    private fun collapse(onRight: Boolean) {
-        val dial = overlayView ?: return
-        savePosition()
-        val centerY = layoutParams.y + dial.height / 2
-        dial.removeCallbacks(idleFadeRunnable)
-        dial.animate().cancel()
-        runCatching { wm.removeView(dial) }
-        overlayView = null
-        pushArmed = false
+    private fun snapIfNearWall(root: View) {
+        val screen = fullDisplayBounds()
+        val zone = (SNAP_ZONE_DP * density).toInt()
+        val w = root.width
+        val leftGap = layoutParams.x
+        val rightGap = screen.width() - w - layoutParams.x
+        val targetX = when {
+            leftGap <= zone && leftGap <= rightGap -> 0
+            rightGap <= zone -> screen.width() - w
+            else -> return
+        }
+        if (targetX == layoutParams.x) return
+        animateDialX(root, targetX) { tick(root); savePosition() }
+    }
 
-        val bladeH = (BLADE_H_DP * density).toInt()
-        Prefs.setBladePlacement(context, clampBladeY(centerY - bladeH / 2), onRight)
-        Prefs.setCollapsed(context, true)
-        showBlade()
-        bladeRoot?.let { confirmHaptic(it) }
-
-        // One-time tip on the first collapse, as a plain text toast: a 24dp window has no
-        // room for a callout, and text toasts are allowed from a foreground service.
-        if (!Prefs.wasBladeTipShown(context)) {
-            Prefs.setBladeTipShown(context)
-            runCatching { Toast.makeText(context, R.string.gv_blade_tip, Toast.LENGTH_LONG).show() }
+    private fun animateDialX(root: View, targetX: Int, onEnd: () -> Unit) {
+        snapAnimator?.cancel()
+        if (!animationsEnabled()) { layoutParams.x = targetX; applyLayout(); onEnd(); return }
+        snapAnimator = ValueAnimator.ofInt(layoutParams.x, targetX).apply {
+            duration = SNAP_MS
+            interpolator = DecelerateInterpolator(2.2f)
+            addUpdateListener { layoutParams.x = it.animatedValue as Int; applyLayout() }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) { if (overlayView === root) onEnd() }
+            })
+            start()
         }
     }
 
-    /** "She comes home": the dial returns to the exact (x, y) it was collapsed from. */
-    private fun expand() {
-        if (bladeRoot == null) return
-        removeBladeWindow()
-        Prefs.setCollapsed(context, false)
-        showDial()
-        overlayView?.let { wake(it); confirmHaptic(it) }
+    /**
+     * Collapse the dial into the tab on the given edge. The dial's (x, y) is saved first and
+     * is what [expand] returns to, exactly. The dial shrinks toward the wall and fades; the
+     * tab then springs out of the same spot. Attenuation is untouched: this is a view swap.
+     */
+    private fun collapse(onRight: Boolean) {
+        val dial = overlayView ?: return
+        if (morphing) return
+        morphing = true
+        snapAnimator?.cancel()
+        savePosition()
+        val centerY = layoutParams.y + dial.height / 2
+        val winH = (TAB_WINDOW_H_DP * density).toInt()
+        Prefs.setBladePlacement(context, clampTabY(centerY - winH / 2), onRight)
+        Prefs.setCollapsed(context, true)
+        dial.removeCallbacks(idleFadeRunnable)
+        pushArmed = false
+
+        val finish = {
+            runCatching { wm.removeView(dial) }
+            if (overlayView === dial) overlayView = null
+            showTab(animateIn = true)
+            bladeRoot?.let { confirmHaptic(it) }
+            morphing = false
+            // One-time tip on the first collapse, as a plain text toast: the tab has no room
+            // for a callout, and text toasts are allowed from a foreground service.
+            if (!Prefs.wasBladeTipShown(context)) {
+                Prefs.setBladeTipShown(context)
+                runCatching { Toast.makeText(context, R.string.gv_blade_tip, Toast.LENGTH_LONG).show() }
+            }
+        }
+        dial.animate().cancel()
+        if (!animationsEnabled()) { finish(); return }
+        dial.pivotX = if (onRight) dial.width.toFloat() else 0f
+        dial.pivotY = (centerY - layoutParams.y).toFloat()
+        dial.animate().scaleX(MORPH_SCALE).scaleY(0.92f).alpha(0f).setDuration(MORPH_MS)
+            .setInterpolator(AccelerateInterpolator(1.4f)).withEndAction { finish() }.start()
     }
 
-    private fun showBlade() {
-        val bladeW = (BLADE_W_DP * density).toInt()
-        val bladeH = (BLADE_H_DP * density).toInt()
+    /** "She comes home": the tab folds away and the dial springs back to its saved (x, y). */
+    private fun expand() {
+        val tab = bladeRoot ?: return
+        if (morphing) return
+        morphing = true
+        Prefs.setCollapsed(context, false)
+        val onRight = bladeOnRight
+        val finish = {
+            removeBladeWindow()
+            showDial(entranceFromRight = onRight, animateEntrance = true)
+            overlayView?.let { confirmHaptic(it) }
+            morphing = false
+        }
+        tab.animate().cancel()
+        if (!animationsEnabled()) { finish(); return }
+        tab.pivotX = if (onRight) tab.width.toFloat() else 0f
+        tab.pivotY = tab.height / 2f
+        tab.animate().scaleX(MORPH_SCALE).alpha(0f).setDuration(MORPH_OUT_MS)
+            .setInterpolator(AccelerateInterpolator()).withEndAction { finish() }.start()
+    }
+
+    private fun showTab(animateIn: Boolean) {
+        val winW = (TAB_WINDOW_W_DP * density).toInt()
+        val winH = (TAB_WINDOW_H_DP * density).toInt()
         val screen = fullDisplayBounds()
         bladeOnRight = Prefs.isBladeOnRight(context, false)
 
         val root = FrameLayout(context)
-        val strip = BladeView(context).apply {
-            stripWidthPx = BLADE_STRIP_DP * density
+        val tab = DockTabView(context).apply {
+            tabWidthPx = TAB_W_DP * density
+            tabHeightPx = TAB_H_DP * density
             onRight = bladeOnRight
             contentDescription = context.getString(R.string.gv_blade_desc)
         }
-        root.addView(strip, FrameLayout.LayoutParams(bladeW, bladeH))
+        root.addView(tab, FrameLayout.LayoutParams(winW, winH))
         bladeRoot = root
-        bladeView = strip
+        bladeView = tab
 
-        bladeParams.width = bladeW
-        bladeParams.height = bladeH
-        bladeParams.x = if (bladeOnRight) screen.width() - bladeW else 0
-        bladeParams.y = clampBladeY(Prefs.getBladeY(context, screen.height() / 3))
+        bladeParams.width = winW
+        bladeParams.height = winH
+        bladeParams.x = if (bladeOnRight) screen.width() - winW else 0
+        bladeParams.y = clampTabY(Prefs.getBladeY(context, screen.height() / 3))
         wm.addView(root, bladeParams)
 
-        // The strip lives where the back gesture lives. Excluding its own rect is the same
+        if (animateIn && animationsEnabled()) {
+            root.pivotX = if (bladeOnRight) winW.toFloat() else 0f
+            root.pivotY = winH / 2f
+            root.scaleX = MORPH_SCALE
+            root.alpha = 0f
+            root.animate().scaleX(1f).alpha(1f).setDuration(MORPH_MS)
+                .setInterpolator(OvershootInterpolator(1.6f)).start()
+        }
+
+        // The tab lives where the back gesture lives. Excluding its own rect is the same
         // mechanism an edge panel uses; Android caps the exclusion at 200dp per edge and
-        // this strip is 96dp, so the request is honoured in full.
+        // this window is 88dp, so the request is honoured in full.
         root.post {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 root.systemGestureExclusionRects = listOf(Rect(0, 0, root.width, root.height))
             }
         }
 
-        setupBladeTouch(root)
+        setupTabTouch(root)
         renderBlade()
         scheduleBladeIdle()
     }
@@ -364,6 +460,7 @@ class OverlayManager(
     private fun removeBladeWindow() {
         bladeRoot?.let {
             it.removeCallbacks(bladeIdleRunnable)
+            it.animate().cancel()
             bladeDimAnimator?.cancel()
             bladeDimAnimator = null
             runCatching { wm.removeView(it) }
@@ -372,26 +469,36 @@ class OverlayManager(
         bladeView = null
     }
 
-    /** Tap restores the dial; a vertical drag moves the blade within the spec's band. */
-    private fun setupBladeTouch(root: View) {
+    /**
+     * Tap the plus, or pull the tab inward, and the dial comes back. A vertical drag moves
+     * the tab within the spec's band.
+     */
+    private fun setupTabTouch(root: View) {
         var initialY = 0
+        var downRawX = 0f
         var downRawY = 0f
         var dragging = false
+        val pullPx = (TAB_PULL_DP * density).toInt()
         root.setOnTouchListener { _, e ->
+            if (bladeRoot !== root) return@setOnTouchListener true
             when (e.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     wakeBlade()
                     initialY = bladeParams.y
+                    downRawX = e.rawX
                     downRawY = e.rawY
                     dragging = false
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
+                    val dx = (e.rawX - downRawX).toInt()
                     val dy = (e.rawY - downRawY).toInt()
+                    val inward = if (bladeOnRight) -dx else dx
+                    if (inward >= pullPx) { expand(); return@setOnTouchListener true }
                     if (!dragging && abs(dy) > DRAG_SLOP_PX) dragging = true
                     if (dragging) {
-                        bladeParams.y = clampBladeY(initialY + dy)
-                        bladeRoot?.let { runCatching { wm.updateViewLayout(it, bladeParams) } }
+                        bladeParams.y = clampTabY(initialY + dy)
+                        runCatching { wm.updateViewLayout(root, bladeParams) }
                     }
                     true
                 }
@@ -411,13 +518,13 @@ class OverlayManager(
     }
 
     /**
-     * The blade's picture of the level, over the COMBINED scale the chevrons walk: upper
+     * The tab's picture of the level, over the COMBINED scale the chevrons walk: upper
      * rungs first, then the visible quiet steps. Fill rises from the bottom to the current
      * position; the tick sits where the last upper rung meets the first quiet step, which is
      * where the dial draws its orange line.
      */
     private fun renderBlade() {
-        val strip = bladeView ?: return
+        val tab = bladeView ?: return
         val s = coordinator.uiState()
         val quietVisible = QUIET_TOP_VISIBLE + 1
         val total = (s.upperCount + quietVisible).coerceAtLeast(1)
@@ -427,7 +534,7 @@ class OverlayManager(
         } else {
             s.upperPos.coerceIn(0, total - 1)
         }
-        strip.update(
+        tab.update(
             fill = (total - index).toFloat() / total,
             tick = s.upperCount.toFloat() / total,
             muted = s.muted,
@@ -436,11 +543,11 @@ class OverlayManager(
     }
 
     /** Spec band: never higher than 96dp from the top, never lower than 160dp above the nav bar. */
-    private fun clampBladeY(y: Int): Int {
-        val bladeH = (BLADE_H_DP * density).toInt()
+    private fun clampTabY(y: Int): Int {
+        val winH = (TAB_WINDOW_H_DP * density).toInt()
         val screen = fullDisplayBounds()
-        val minY = (BLADE_TOP_MIN_DP * density).toInt()
-        val maxY = max(minY, screen.height() - navBarHeight() - (BLADE_NAV_GAP_DP * density).toInt() - bladeH)
+        val minY = (TAB_TOP_MIN_DP * density).toInt()
+        val maxY = max(minY, screen.height() - navBarHeight() - (TAB_NAV_GAP_DP * density).toInt() - winH)
         return y.coerceIn(minY, maxY)
     }
 
@@ -458,12 +565,12 @@ class OverlayManager(
 
     /** Drawn dim rather than view alpha, so the orange tick stays at full opacity (spec). */
     private fun animateBladeDim(target: Float, durationMs: Long) {
-        val strip = bladeView ?: return
+        val tab = bladeView ?: return
         bladeDimAnimator?.cancel()
-        if (!animationsEnabled()) { strip.dim = target; return }
-        bladeDimAnimator = ValueAnimator.ofFloat(strip.dim, target).apply {
+        if (!animationsEnabled()) { tab.dim = target; return }
+        bladeDimAnimator = ValueAnimator.ofFloat(tab.dim, target).apply {
             duration = durationMs
-            addUpdateListener { strip.dim = it.animatedValue as Float }
+            addUpdateListener { tab.dim = it.animatedValue as Float }
             start()
         }
     }
@@ -559,6 +666,7 @@ class OverlayManager(
         root.setOnTouchListener { _, e ->
             when (e.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
+                    snapAnimator?.cancel()
                     wake(root)
                     dismissTooltipIfShown(root)
                     initialX = layoutParams.x
@@ -621,6 +729,7 @@ class OverlayManager(
                             pushArmed = false
                             root.animate().scaleX(1f).alpha(ACTIVE_ALPHA).setDuration(WAKE_MS).start()
                         }
+                        snapIfNearWall(root)
                     } else {
                         handleTap(root, e.rawX, e.rawY, quietBars, btnUp, btnDown, btnDismiss, btnInfo, btnMinimize, btnMute)
                     }
@@ -671,13 +780,13 @@ class OverlayManager(
         if (hit(btnDown, rawX, rawY, chevronHitSlop)) {
             pressPulse(btnDown); tick(root); stepCombined(-1); onEngaged?.invoke(); return
         }
+        if (hit(btnInfo, rawX, rawY, infoHitSlop)) {
+            flash(btnInfo); onInfo(); return
+        }
         if (hit(btnMinimize, rawX, rawY, minimizeHitSlop)) {
             flash(btnMinimize)
             val onRight = layoutParams.x + root.width / 2 > fullDisplayBounds().width() / 2
             collapse(onRight); return
-        }
-        if (hit(btnInfo, rawX, rawY, infoHitSlop)) {
-            flash(btnInfo); onInfo(); return
         }
         if (hit(btnDismiss, rawX, rawY, dismissHitSlop)) {
             flash(btnDismiss); onDismiss(); return
@@ -1032,12 +1141,14 @@ class OverlayManager(
         if (w == 0 || h == 0) return false
 
         val screen = fullDisplayBounds()
-        val sidePeek = (SIDE_PEEK_DP * density).toInt()
         val navTop = screen.height() - navBarHeight()
         val visibleAtBottom = h / BOTTOM_VISIBLE_FRACTION
 
-        val minX = -(w - sidePeek)
-        val maxX = max(minX, screen.width() - sidePeek)
+        // 1.5.1 pilot 2: the dial stays fully on screen sideways. Parking it half off the
+        // edge was the old way to get it out of the way; the docked tab is the new one, and
+        // a wall the dial can be flush against is what the suction glides it to.
+        val minX = 0
+        val maxX = max(minX, screen.width() - w)
         val minY = statusBarHeight()
         val maxY = max(minY, navTop - visibleAtBottom)
         // Remembered for the push-through test only; the clamp itself is unchanged.
