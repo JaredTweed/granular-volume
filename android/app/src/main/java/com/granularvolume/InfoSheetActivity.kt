@@ -198,6 +198,15 @@ class InfoSheetActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
+        // 1.5.1: replay the feature tour. The service opens the dial if it is docked, then
+        // runs the four callouts; the sheet closes so the dial is unobstructed.
+        row.addView(link(getString(R.string.gv_tour_replay)) {
+            startService(
+                Intent(this, VolumeControlService::class.java)
+                    .apply { action = VolumeControlService.ACTION_SHOW_TOUR }
+            )
+            finish()
+        })
         row.addView(link(getString(R.string.gv_info_terms)) { openUrl(URL_TERMS) })
         row.addView(link(getString(R.string.gv_info_privacy)) { openUrl(URL_PRIVACY) })
         row.addView(link(getString(R.string.gv_licenses_title)) {

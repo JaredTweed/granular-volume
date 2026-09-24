@@ -6,7 +6,12 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.Canvas
+import android.graphics.ColorFilter
+import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.provider.Settings
 import android.util.DisplayMetrics
@@ -27,6 +32,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import com.granularvolume.BuildConfig
 import com.granularvolume.R
 import com.granularvolume.audio.AudioController
 import com.granularvolume.audio.FullRangeCoordinator
@@ -151,6 +157,10 @@ class OverlayManager(
         private const val MORPH_OUT_MS = 130L
         private const val MORPH_SCALE = 0.35f
         private const val TAB_IDLE_ALPHA = 0.6f
+
+        // 1.5.1 feature tour
+        private const val TOUR_STEPS = 4
+        private const val TOUR_START_DELAY_MS = 700L
 
         // 1.4.4 press feedback + key-press flash.
         private const val PRESS_SCALE = 0.96f
@@ -299,6 +309,7 @@ class OverlayManager(
     }
 
     fun hide() {
+        endTour(animated = false)
         flowJob?.cancel()
         flowJob = null
         overlayView?.let {
@@ -359,6 +370,7 @@ class OverlayManager(
     private fun collapse(onRight: Boolean) {
         val dial = overlayView ?: return
         if (morphing) return
+        endTour()
         morphing = true
         snapAnimator?.cancel()
         savePosition()
@@ -575,6 +587,151 @@ class OverlayManager(
             addUpdateListener { tab.dim = it.animatedValue as Float }
             start()
         }
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // 1.5.1 feature tour: four callouts on the LIVE dial, once per install or update
+    // ────────────────────────────────────────────────────────────────
+
+    private var tourView: TourView? = null
+    private var tourStep = 0
+    private val tourRing = TourRingDrawable(density)
+    private var ringAnimator: ValueAnimator? = null
+    private val tourParams = WindowManager.LayoutParams(
+        WindowManager.LayoutParams.MATCH_PARENT,
+        WindowManager.LayoutParams.MATCH_PARENT,
+        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+        PixelFormat.TRANSLUCENT
+    ).apply { gravity = Gravity.TOP or Gravity.START }
+
+    /**
+     * Once per install or update, on a start the PERSON made: the service calls this only
+     * off a real start intent, never off the boot receiver (the anti-adware rule). Also never
+     * when the range is locked, never during a cellular call, and only over the open dial.
+     */
+    fun maybeStartTour() {
+        if (Prefs.getTourShownVersion(context) >= BuildConfig.VERSION_CODE) return
+        val dial = overlayView ?: return
+        if (coordinator.lockedDisplayProvider() || coordinator.uiState().quietUnavailable) return
+        dial.postDelayed({
+            if (overlayView === dial && tourView == null && !morphing) startTour()
+        }, TOUR_START_DELAY_MS)
+    }
+
+    /** Replay from the info sheet: opens the dial first if it is docked. */
+    fun startTourOnRequest() {
+        if (bladeRoot != null) {
+            expand()
+            bladeRoot ?: overlayView?.postDelayed({ startTour() }, MORPH_MS + MORPH_OUT_MS + 120L)
+            return
+        }
+        startTour()
+    }
+
+    private fun startTour() {
+        val dial = overlayView ?: return
+        if (tourView != null) return
+        Prefs.setTourShownVersion(context, BuildConfig.VERSION_CODE)
+        // The tour replaces the old one-line hint next to the line.
+        Prefs.setLineTooltipShown(context)
+        dial.findViewById<TextView>(R.id.gv_line_tooltip)?.visibility = View.GONE
+
+        val tv = TourView(
+            context,
+            onSkip = { endTour() },
+            onNext = { if (tourStep >= TOUR_STEPS) endTour() else showTourStep(tourStep + 1) }
+        )
+        tourView = tv
+        tv.alpha = 0f
+        // Cover the status bar too. Overlay windows are laid out below it by default; on
+        // API 30+ the window can simply opt out of fitting any inset. (A negative y offset
+        // with NO_LIMITS also draws there, but it broke touch delivery in the pilot.)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) tourParams.fitInsetsTypes = 0
+        wm.addView(tv, tourParams)
+        // The dial must sit ABOVE the scrim and stay live, so it is re-added as the newest
+        // window. Same view, same params, same listeners; only the z-order changes.
+        runCatching { wm.removeView(dial) }
+        wm.addView(dial, layoutParams)
+        dial.removeCallbacks(idleFadeRunnable)
+        dial.animate().cancel()
+        dial.alpha = ACTIVE_ALPHA
+        dial.overlay.add(tourRing)
+        tv.animate().alpha(1f).setDuration(220L).start()
+        tv.post { showTourStep(1) }
+    }
+
+    private fun tourTargets(dial: View, step: Int): List<View> = when (step) {
+        1 -> listOf(dial.findViewById(R.id.gv_upper_container))
+        2 -> listOf(dial.findViewById(R.id.gv_divider), dial.findViewById(R.id.gv_steps_container))
+        3 -> listOf(dial.findViewById(R.id.gv_btn_mute))
+        else -> listOf(dial.findViewById(R.id.gv_btn_minimize))
+    }
+
+    private fun showTourStep(step: Int) {
+        val dial = overlayView ?: run { endTour(); return }
+        val tv = tourView ?: return
+        tourStep = step
+        val dialLoc = IntArray(2); dial.getLocationOnScreen(dialLoc)
+        val dialRect = Rect(dialLoc[0], dialLoc[1], dialLoc[0] + dial.width, dialLoc[1] + dial.height)
+        var target: Rect? = null
+        for (v in tourTargets(dial, step)) {
+            val l = IntArray(2); v.getLocationOnScreen(l)
+            val r = Rect(l[0], l[1], l[0] + v.width, l[1] + v.height)
+            target = target?.apply { union(r) } ?: r
+        }
+        val t = target ?: dialRect
+        val titles = intArrayOf(R.string.gv_tour_1_title, R.string.gv_tour_2_title, R.string.gv_tour_3_title, R.string.gv_tour_4_title)
+        val bodies = intArrayOf(R.string.gv_tour_1_body, R.string.gv_tour_2_body, R.string.gv_tour_3_body, R.string.gv_tour_4_body)
+        val cardOnRight = dialRect.centerX() < fullDisplayBounds().width() / 2
+        tv.showStep(
+            step, TOUR_STEPS,
+            context.getString(titles[step - 1]), context.getString(bodies[step - 1]),
+            t, dialRect, cardOnRight, animate = animationsEnabled()
+        )
+
+        // Ring the element inside the dial; between steps the ring glides to its new home.
+        val pad = (4 * density).toInt()
+        val ringTo = Rect(t.left - dialLoc[0] - pad, t.top - dialLoc[1] - pad,
+                          t.right - dialLoc[0] + pad, t.bottom - dialLoc[1] + pad)
+        ringAnimator?.cancel()
+        val from = Rect(tourRing.bounds)
+        if (from.isEmpty || !animationsEnabled()) {
+            tourRing.bounds = ringTo; dial.invalidate()
+        } else {
+            ringAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+                duration = 260L
+                interpolator = DecelerateInterpolator(1.8f)
+                addUpdateListener {
+                    val f = it.animatedValue as Float
+                    tourRing.setBounds(
+                        (from.left + (ringTo.left - from.left) * f).toInt(),
+                        (from.top + (ringTo.top - from.top) * f).toInt(),
+                        (from.right + (ringTo.right - from.right) * f).toInt(),
+                        (from.bottom + (ringTo.bottom - from.bottom) * f).toInt()
+                    )
+                    dial.invalidate()
+                }
+                start()
+            }
+        }
+    }
+
+    private fun endTour(animated: Boolean = true) {
+        val tv = tourView ?: return
+        tourView = null
+        ringAnimator?.cancel()
+        overlayView?.let {
+            it.overlay.remove(tourRing)
+            tourRing.setBounds(0, 0, 0, 0)
+            it.invalidate()
+            scheduleIdleFade(it)
+        }
+        if (animated && animationsEnabled()) tv.fadeOut { runCatching { wm.removeView(tv) } }
+        else runCatching { wm.removeView(tv) }
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -1210,6 +1367,33 @@ class OverlayManager(
 
     private fun scheduleIdleFade(root: View) {
         root.removeCallbacks(idleFadeRunnable)
+        if (tourView != null) return
         root.postDelayed(idleFadeRunnable, IDLE_FADE_DELAY_MS)
     }
+}
+
+/**
+ * The tour's highlight ring, drawn INSIDE the dial through its ViewOverlay: a 2dp accent
+ * outline with a soft glow around the element being described. Bounds are in the dial's
+ * own coordinates and are animated between steps by [OverlayManager].
+ */
+private class TourRingDrawable(density: Float) : Drawable() {
+    private val glow = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE; strokeWidth = 8f * density; color = 0x3A8179FF
+    }
+    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE; strokeWidth = 2f * density; color = 0xFF8179FF.toInt()
+    }
+    private val radius = 10f * density
+    private val rectF = RectF()
+    override fun draw(canvas: Canvas) {
+        if (bounds.isEmpty) return
+        rectF.set(bounds)
+        canvas.drawRoundRect(rectF, radius, radius, glow)
+        canvas.drawRoundRect(rectF, radius, radius, ring)
+    }
+    override fun setAlpha(alpha: Int) {}
+    override fun setColorFilter(colorFilter: ColorFilter?) {}
+    @Deprecated("Deprecated in Java")
+    override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
 }

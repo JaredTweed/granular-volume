@@ -20,6 +20,7 @@ object Prefs {
     private const val KEY_BLADE_Y          = "blade_y"
     private const val KEY_BLADE_RIGHT      = "blade_right"
     private const val KEY_BLADE_TIP_SHOWN  = "blade_tip_shown"
+    private const val KEY_TOUR_SHOWN_VERSION = "tour_shown_version"
     private const val KEY_QS_TILE_OFFERED  = "qs_tile_offered"
     private const val KEY_LAUNCH_COUNT     = "launch_count"
     private const val KEY_TILE_ACTIVATIONS = "tile_activations"
@@ -92,6 +93,18 @@ object Prefs {
             putInt(KEY_BLADE_Y, y)
             putBoolean(KEY_BLADE_RIGHT, onRight)
         }
+    }
+
+    /**
+     * 1.5.1: the versionCode whose feature tour has been shown. The tour runs once per
+     * install AND once per update (the owner's call: every installer and updater sees it),
+     * so the gate is a version number, not a boolean.
+     */
+    fun getTourShownVersion(context: Context): Int =
+        prefs(context).getInt(KEY_TOUR_SHOWN_VERSION, 0)
+
+    fun setTourShownVersion(context: Context, versionCode: Int) {
+        prefs(context).edit { putInt(KEY_TOUR_SHOWN_VERSION, versionCode) }
     }
 
     fun wasBladeTipShown(context: Context): Boolean =

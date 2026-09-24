@@ -69,6 +69,8 @@ class VolumeControlService : Service() {
          * (see keyInstalledReceiver), whatever screen the buyer is on.
          */
         const val ACTION_KEY_INSTALLED = "com.granularvolume.ACTION_KEY_INSTALLED"
+        /** 1.5.1: replay the feature tour, sent by the info sheet's "Show the tour" link. */
+        const val ACTION_SHOW_TOUR = "com.granularvolume.ACTION_SHOW_TOUR"
 
         /**
          * Boot-restore starts carry this so the purchase sheet stays closed. A boot is
@@ -341,6 +343,7 @@ class VolumeControlService : Service() {
                 stopSelf()
             }
             ACTION_KEY_INSTALLED -> onKeyArrived("activity")
+            ACTION_SHOW_TOUR -> overlayManager.startTourOnRequest()
             // A plain start with a real Intent is a person or the boot receiver turning
             // the control on; a null Intent is only ever the system resurrecting a
             // killed sticky service, which no one asked for and no sheet may answer.
@@ -392,6 +395,8 @@ class VolumeControlService : Service() {
         if (fromBoot) return
         if (ProAccess.isTrialExpired(applicationContext)) { openInfoSheet(); return }
         maybeLastDayNudge()
+        // 1.5.1: the feature tour, once per install or update, only on a start a person made.
+        overlayManager.maybeStartTour()
     }
 
     /** Once, on the trial's final day: cheapest check first, so the everyday cost is one boolean read. */
