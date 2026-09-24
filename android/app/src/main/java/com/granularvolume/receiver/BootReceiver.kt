@@ -25,12 +25,23 @@ class BootReceiver : BroadcastReceiver() {
         // it and meets the purchase sheet then.
         if (Prefs.wasServiceRunning(context) && !ProAccess.isTrialExpired(context)) {
             Log.i("GranularVolume:Boot", "Restarting VolumeControlService after boot")
-            context.startForegroundService(
-                Intent(context, VolumeControlService::class.java)
-                    // Marks the start as machine-originated, so the service's purchase
-                    // sheet stays quiet: a boot is not the user opening the control.
-                    .putExtra(VolumeControlService.EXTRA_FROM_BOOT, true)
-            )
+            // 1.5.3: a boot broadcast delivered while the system does not grant the
+            // background-start exemption (seen when BOOT_COMPLETED is re-delivered to a package
+            // after a force-stop) made startForegroundService throw
+            // ForegroundServiceStartNotAllowedException, and an uncaught throw in a receiver
+            // crashes the app. A refused restart now just logs: the control stays off and
+            // comes back the next time the user opens it, exactly like a locked one.
+            try {
+                context.startForegroundService(
+                    Intent(context, VolumeControlService::class.java)
+                        // Marks the start as machine-originated, so the service's purchase
+                        // sheet stays quiet: a boot is not the user opening the control.
+                        .putExtra(VolumeControlService.EXTRA_FROM_BOOT, true)
+                )
+            } catch (e: IllegalStateException) {
+                // ForegroundServiceStartNotAllowedException (API 31+) extends IllegalStateException.
+                Log.w("GranularVolume:Boot", "Restart after boot refused by the system: ${e.message}")
+            }
         } else if (Prefs.wasServiceRunning(context)) {
             Log.i("GranularVolume:Boot", "Not restarting after boot: the dial is locked")
         }

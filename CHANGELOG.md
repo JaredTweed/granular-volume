@@ -13,6 +13,9 @@ All notable changes to Granular Volume are documented here. Format loosely follo
 - The main screen could crash when Google Play's rating prompt finished after the screen had
   already closed (IllegalStateException in launchService, present since 1.4.x). The control now
   starts directly in that case.
+- The restart after a phone reboot could crash the app when Android refused to let it start in the
+  background at that moment (ForegroundServiceStartNotAllowedException in BootReceiver). A refused
+  restart now leaves the control off until the next time it is opened, without a crash.
 
 ## 1.5.2 (versionCode 35)
 
