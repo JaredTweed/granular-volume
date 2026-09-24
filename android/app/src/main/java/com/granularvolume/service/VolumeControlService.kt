@@ -394,18 +394,19 @@ class VolumeControlService : Service() {
     private fun onOpenedByUser(fromBoot: Boolean) {
         if (fromBoot) return
         if (ProAccess.isTrialExpired(applicationContext)) { openInfoSheet(); return }
-        maybeLastDayNudge()
-        // 1.5.1: the feature tour, once per install or update, only on a start a person made.
-        overlayManager.maybeStartTour()
+        // 1.5.1: the feature tour, once per install or update, only on a start a person made,
+        // and never over the last-day sheet: one thing at a time on a start.
+        if (!maybeLastDayNudge()) overlayManager.maybeStartTour()
     }
 
     /** Once, on the trial's final day: cheapest check first, so the everyday cost is one boolean read. */
-    private fun maybeLastDayNudge() {
-        if (Prefs.wasLastDayNudgeShown(applicationContext)) return
-        if (!ProAccess.isOnTrial(applicationContext)) return
-        if (Entitlement.daysLeftInTrial(applicationContext) > 1) return
+    private fun maybeLastDayNudge(): Boolean {
+        if (Prefs.wasLastDayNudgeShown(applicationContext)) return false
+        if (!ProAccess.isOnTrial(applicationContext)) return false
+        if (Entitlement.daysLeftInTrial(applicationContext) > 1) return false
         Prefs.setLastDayNudgeShown(applicationContext)
         openInfoSheet()
+        return true
     }
 
     private fun openInfoSheet() {

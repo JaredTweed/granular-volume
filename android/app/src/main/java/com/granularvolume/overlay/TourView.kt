@@ -240,6 +240,19 @@ class TourView(
         canvas.drawCircle(startX, startY, r + dp(3f), dotRingPaint)
     }
 
+    /**
+     * A tap on the scrim, outside the card, ends the tour. The scrim is a full-screen window
+     * above every app, so without this a person who wandered off to another app mid-tour
+     * would find it dimmed and deaf until they found the card. One stray tap and it is gone.
+     */
+    override fun onTouchEvent(event: android.view.MotionEvent): Boolean {
+        if (event.actionMasked == android.view.MotionEvent.ACTION_UP) {
+            val r = Rect(); card.getHitRect(r)
+            if (!r.contains(event.x.toInt(), event.y.toInt())) onSkip()
+        }
+        return true
+    }
+
     fun fadeOut(onEnd: () -> Unit) {
         lineAnimator?.cancel()
         animate().alpha(0f).setDuration(160L).withEndAction { onEnd() }.start()

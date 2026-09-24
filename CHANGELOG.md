@@ -2,6 +2,26 @@
 
 All notable changes to Granular Volume are documented here. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## 1.5.1 (versionCode 34)
+
+### Added
+- Minimize. The new minus button, or a drag that pushes the dial past a screen edge, folds it into
+  a small tab with a plus sign at that edge. The tab still shows the level and the device-minimum
+  line, and the attenuation keeps running. Tap the plus, or pull the tab inward, and the dial
+  returns to exactly where it was. The tab survives a service restart and a reboot.
+- Docking. Release the dial near either side of the screen and it glides flush to that edge.
+- A four-step feature tour on the first start after installing or updating: normal volume, the
+  quiet zone, mute, and the tab. The dial stays live during the tour, so each step can be tried.
+  Skip at any step; replay from the info sheet.
+
+### Changed
+- The info button sits alone at the top of the dial; minimize and close are paired below it. A
+  finger that aims at the info button and lands low now minimizes instead of closing.
+- The dial no longer parks half off the screen; the tab replaces that.
+- The one-line hint next to the orange line is replaced by the tour.
+- Grandfather cutoff for updates set to 2026-10-01 (installs before the paid version, updated
+  later, still keep everything).
+
 ## 1.5.0 (versionCode 33)
 
 **If you installed the app before this version, nothing changes for you.** The complete app stays

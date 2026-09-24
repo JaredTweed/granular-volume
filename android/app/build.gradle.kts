@@ -33,11 +33,14 @@ android {
         targetSdk = 36          // Play requires API 36 (Android 16) for updates from Aug 31, 2026
         versionCode = 34
         versionName = "1.5.1"
-        // Grandfather cutoff, 2026-12-01T00:00:00Z. Overridable ONLY for the harness
+        // Grandfather cutoff, 2026-10-01T00:00:00Z (1.5.1, mock-trial order item 40: the
+        // 1.5.0 rollout reached 100% on 2026-09-23 10:28 UTC, plus seven days, rounded up
+        // to the next UTC midnight). An UPDATE whose first install predates this is
+        // grandfathered; a fresh install never is. Overridable ONLY for the harness
         // (-PgvGateCutoffMs=...); a release build must be made without the property.
         buildConfigField(
             "long", "GATE_CUTOFF_MS",
-            "${project.findProperty("gvGateCutoffMs") ?: "1796083200000"}L"
+            "${project.findProperty("gvGateCutoffMs") ?: "1790812800000"}L"
         )
     }
 
