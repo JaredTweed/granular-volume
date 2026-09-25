@@ -3,6 +3,8 @@ package com.granularvolume.audio
 import android.content.Context
 import android.media.AudioManager
 import android.media.AudioDeviceInfo
+import android.media.AudioAttributes
+import android.os.Build
 import android.os.SystemClock
 import android.util.Log
 import com.granularvolume.util.Prefs
@@ -83,11 +85,21 @@ class StreamVolumeController(context: Context) {
         return Prefs.getBluetoothFloor(appContext, name).coerceIn(min, maxIndex(stream))
     }
 
-    /** The connected media headset; its own acoustic curve is not exposed by Android. */
-    fun activeBluetoothName(): String? = am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-        .firstOrNull { it.type == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
-                       it.type == AudioDeviceInfo.TYPE_BLE_HEADSET }
-        ?.productName?.toString()?.takeIf { it.isNotBlank() }
+    /** The media route's Bluetooth output; its acoustic curve is not exposed by Android. */
+    fun activeBluetoothName(): String? {
+        val outputs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            am.getAudioDevicesForAttributes(
+                AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).build()
+            )
+        } else {
+            // Older Android cannot report the prospective media route. Only use a
+            // calibration when exactly one wireless output is connected.
+            am.getDevices(AudioManager.GET_DEVICES_OUTPUTS).toList()
+        }
+        val wireless = outputs.filter { it.type in BLUETOOTH_MEDIA_TYPES }
+        if (wireless.size != 1) return null
+        return wireless.single().productName?.toString()?.takeIf { it.isNotBlank() }
+    }
 
     /**
      * Explicit user-initiated set (slider touch). May move in either direction.
@@ -158,6 +170,12 @@ class StreamVolumeController(context: Context) {
     }
 
     companion object {
+        private val BLUETOOTH_MEDIA_TYPES = setOf(
+            AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+            AudioDeviceInfo.TYPE_BLE_HEADSET,
+            AudioDeviceInfo.TYPE_BLE_SPEAKER,
+            AudioDeviceInfo.TYPE_HEARING_AID
+        )
         // Generous, because the value must also match — see wasSelfChange.
         private const val SELF_CHANGE_WINDOW_MS = 1_500L
     }

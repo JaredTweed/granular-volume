@@ -39,7 +39,8 @@ import com.granularvolume.util.Prefs
  *  - a long-time user who dismissed the one-time card had no route back to supporting us
  *  - the legal texts were reachable only from a screen that closes itself once set up
  *
- * Read-only by design: it reports state and offers Play. It never writes entitlement.
+ * It reports access and offers Play without writing entitlement. The Bluetooth floor
+ * control stores only the listener's calibration for the connected media output.
  */
 class InfoSheetActivity : AppCompatActivity() {
 
