@@ -2,6 +2,8 @@
 
 <img src="store-assets/play_icon_512.png" width="120" alt="Granular Volume icon">
 
+# Granular Volume
+
 **Volume below Android's minimum. A floating control that stays above any app.**
 
 *It also stands in for broken volume buttons: the slider drives normal system volume above the
