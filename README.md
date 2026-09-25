@@ -2,25 +2,6 @@
 
 <img src="store-assets/play_icon_512.png" width="120" alt="Granular Volume icon">
 
-# Granular Volume
-
-## Bluetooth headset floor calibration (fork)
-
-Some Bluetooth headsets produce silence at Android's first nonzero media-volume
-index. Quiet Dial previously pinned its quiet zone to that index, so its extra
-attenuation could never produce audible sound on those headsets. It also pulled
-Volume Up back to the silent index while the quiet zone was active.
-
-With the headset connected and audio playing, open the dial's info sheet. Use the
-"first audible volume step" buttons to find the lowest step you can actually hear.
-Each button press previews that hardware step at normal gain. The selection is
-stored for that headset name and is used as the floor for the quiet zone and the
-upper-zone curve. After calibration, select a quiet step on the dial to attenuate
-below the headset's first audible level.
-
-The separate `fdroidDebug` package can be installed alongside the original app
-for testing. Only one volume-control service should run at a time.
-
 **Volume below Android's minimum. A floating control that stays above any app.**
 
 *It also stands in for broken volume buttons: the slider drives normal system volume above the
